@@ -39,6 +39,8 @@ from kvpress.presses.streaming_llm_press import StreamingLLMPress
 from kvpress.presses.think_press import ThinKPress
 from kvpress.presses.threshold_press import ThresholdPress
 from kvpress.presses.tova_press import TOVAPress
+from kvpress.presses.block_wise_press import BlockWisePress
+from kvpress.presses.block_score_press import BlockScorePress
 
 # Patch the attention functions to support head-wise compression
 patch_attention_functions()
@@ -81,4 +83,6 @@ __all__ = [
     "NonCausalAttnPress",
     "KVzapPress",
     "ThresholdPress",
+    "BlockWisePress",
+    "BlockScorePress",
 ]

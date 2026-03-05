@@ -29,6 +29,7 @@ from kvpress import (
     ScorerPress,
     ThinKPress,
     ThresholdPress,
+    BlockWisePress,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ class EvaluationConfig:
     compression_ratio: float = 1.0
     key_channel_compression_ratio: Optional[float] = None
     threshold: Optional[float] = None
+    block_size: Optional[int] = None
 
     # Dataset and generation parameters
     fraction: float = 1.0
@@ -83,29 +85,39 @@ class EvaluationConfig:
         assert self.dataset in SCORER_REGISTRY, f"No scorer found for {self.dataset}"
 
         # Validate press
-        assert self.press_name in PRESS_REGISTRY, f"Press '{self.press_name}' not found in PRESS_REGISTRY"
+        assert self.press_name in PRESS_REGISTRY, (
+            f"Press '{self.press_name}' not found in PRESS_REGISTRY"
+        )
 
         if self.press_name == "no_press":
             # override compression_ratio to 0.0
-            logger.info("Using 'no_press' configuration. Overriding compression_ratio to 0.0")
+            logger.info(
+                "Using 'no_press' configuration. Overriding compression_ratio to 0.0"
+            )
             self.compression_ratio = 0.0
 
         # Only validate key_channel_compression_ratio if it's not None
         if self.key_channel_compression_ratio is not None:
-            assert (
-                0.0 <= self.key_channel_compression_ratio <= 1.0
-            ), f"key_channel_compression_ratio must be between 0.0 and 1.0, got {self.key_channel_compression_ratio}"
+            assert 0.0 <= self.key_channel_compression_ratio <= 1.0, (
+                f"key_channel_compression_ratio must be between 0.0 and 1.0, got {self.key_channel_compression_ratio}"
+            )
 
         # Validate fraction
-        assert 0.0 < self.fraction <= 1.0, f"fraction must be between 0.0 and 1.0, got {self.fraction}"
+        assert 0.0 < self.fraction <= 1.0, (
+            f"fraction must be between 0.0 and 1.0, got {self.fraction}"
+        )
 
         # Initialize model_kwargs if None
         if self.model_kwargs is None:
             self.model_kwargs = {}
 
         if self.dataset == "needle_in_haystack":
-            assert self.needle_depth is not None, "needle_depth must be set for needle_in_haystack"
-            assert self.max_context_length is not None, "max_context_length must be set for needle_in_haystack"
+            assert self.needle_depth is not None, (
+                "needle_depth must be set for needle_in_haystack"
+            )
+            assert self.max_context_length is not None, (
+                "max_context_length must be set for needle_in_haystack"
+            )
 
     def get_results_dir(self, output_dir: Path) -> Path:
         """
@@ -162,7 +174,9 @@ class EvaluationConfig:
         Saves the evaluation configuration to a YAML file.
         """
         with open(str(config_filename), "w") as f:
-            yaml.dump(asdict(self), f, default_flow_style=False, indent=2, sort_keys=False)
+            yaml.dump(
+                asdict(self), f, default_flow_style=False, indent=2, sort_keys=False
+            )
 
 
 def _load_yaml_config(path: str | Path) -> dict:
@@ -171,7 +185,9 @@ def _load_yaml_config(path: str | Path) -> dict:
         with open(path, "r") as f:
             return yaml.safe_load(f) or {}
     except FileNotFoundError:
-        logger.warning(f"Config file not found at {path}. Using only command-line arguments and defaults.")
+        logger.warning(
+            f"Config file not found at {path}. Using only command-line arguments and defaults."
+        )
         return {}
 
 
@@ -199,12 +215,16 @@ class EvaluationRunner:
             The configuration for the evaluation run.
         """
         self.config = config
-        self.pipeline: Optional[Pipeline] = None  # Will be set by _setup_model_pipeline()
+        self.pipeline: Optional[Pipeline] = (
+            None  # Will be set by _setup_model_pipeline()
+        )
         self.press: None | ScorerPress = None  # Will be set by _setup_press()
         self.df: Optional[pd.DataFrame] = None  # Will be set by _load_dataset()
         self._setup_logging()
         self._setup_deterministic_seeds()
-        logger.info(f"Initialized EvaluationRunner with config:\n{json.dumps(asdict(self.config), indent=2)}")
+        logger.info(
+            f"Initialized EvaluationRunner with config:\n{json.dumps(asdict(self.config), indent=2)}"
+        )
 
     def _setup_deterministic_seeds(self):
         """Set deterministic seeds for reproducible results."""
@@ -224,7 +244,9 @@ class EvaluationRunner:
         log_level = self.config.log_level.upper()
 
         handler = logging.StreamHandler()
-        handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
         logger.addHandler(handler)
         logger.setLevel(log_level)
 
@@ -249,49 +271,75 @@ class EvaluationRunner:
         press_name = self.config.press_name
         compression_ratio = self.config.compression_ratio
         key_channel_compression_ratio = self.config.key_channel_compression_ratio
+        block_size = self.config.block_size
 
         press = PRESS_REGISTRY[press_name]
 
         # Apply compression ratios based on press type
         if isinstance(press, DuoAttentionPress):
             press.head_compression_ratio = compression_ratio
-            logger.info(f"Set DuoAttentionPress head_compression_ratio to {compression_ratio}")
+            logger.info(
+                f"Set DuoAttentionPress head_compression_ratio to {compression_ratio}"
+            )
         elif isinstance(press, ThresholdPress):
-            assert self.config.threshold is not None, "threshold must be set for ThresholdPress"
+            assert self.config.threshold is not None, (
+                "threshold must be set for ThresholdPress"
+            )
             press.threshold = self.config.threshold
             logger.info(f"Set ThresholdPress threshold to {press.threshold}")
         elif isinstance(press, ComposedPress):
             for ps in press.presses:
                 if isinstance(ps, ThinKPress):
-                    assert (
-                        key_channel_compression_ratio is not None
-                    ), "key_channel_compression_ratio must be set for ThinKPress in ComposedPress"
+                    assert key_channel_compression_ratio is not None, (
+                        "key_channel_compression_ratio must be set for ThinKPress in ComposedPress"
+                    )
                     ps.key_channel_compression_ratio = key_channel_compression_ratio
-                    logger.info(f"Set ComposedPress key_channel_compression_ratio to {key_channel_compression_ratio}")
+                    logger.info(
+                        f"Set ComposedPress key_channel_compression_ratio to {key_channel_compression_ratio}"
+                    )
                 else:
                     # Check if compression_ratio attribute exists before setting
                     if hasattr(ps, "compression_ratio"):
                         ps.compression_ratio = compression_ratio
-                        logger.info(f"Set ComposedPress compression_ratio to {compression_ratio}")
+                        logger.info(
+                            f"Set ComposedPress compression_ratio to {compression_ratio}"
+                        )
                     else:
                         logger.warning(
                             f"ComposedPress component {ps.__class__.__name__} has no 'compression_ratio' attribute."
                         )
         elif isinstance(press, ThinKPress):
-            assert key_channel_compression_ratio is not None, "key_channel_compression_ratio must be set for ThinKPress"
+            assert key_channel_compression_ratio is not None, (
+                "key_channel_compression_ratio must be set for ThinKPress"
+            )
             press.key_channel_compression_ratio = key_channel_compression_ratio
-            logger.info(f"Set ThinKPress key_channel_compression_ratio to {key_channel_compression_ratio}")
+            logger.info(
+                f"Set ThinKPress key_channel_compression_ratio to {key_channel_compression_ratio}"
+            )
         elif isinstance(press, DecodingPress):
-            press.compression_interval = self.config.compression_interval or press.compression_interval
+            press.compression_interval = (
+                self.config.compression_interval or press.compression_interval
+            )
             press.target_size = self.config.target_size or press.target_size
-            press.hidden_states_buffer_size = self.config.hidden_states_buffer_size or press.hidden_states_buffer_size
+            press.hidden_states_buffer_size = (
+                self.config.hidden_states_buffer_size or press.hidden_states_buffer_size
+            )
             logger.info(
                 f"Set DecodingPress compression_interval to {self.config.compression_interval}, target_size to {self.config.target_size}, hidden_states_buffer_size to {self.config.hidden_states_buffer_size}"
             )
+        elif isinstance(press, BlockWisePress):
+            press.compression_ratio = compression_ratio
+            assert self.config.block_size is not None, (
+                "block_size must be set for BlockWisePress"
+            )
+            press.block_size = block_size
+
         else:
             if hasattr(press, "compression_ratio"):
                 press.compression_ratio = compression_ratio
-                logger.info(f"Set {press.__class__.__name__} compression_ratio to {compression_ratio}")
+                logger.info(
+                    f"Set {press.__class__.__name__} compression_ratio to {compression_ratio}"
+                )
             else:
                 logger.warning(
                     f"Press {press.__class__.__name__} has no 'compression_ratio' attribute. This is expected is you set `no_press`."
@@ -310,20 +358,29 @@ class EvaluationRunner:
         data_dir = str(self.config.data_dir) if self.config.data_dir else None
         fraction = self.config.fraction
 
-        logger.info(f"Loading dataset: {DATASET_REGISTRY[dataset_name]} (data_dir: {data_dir})")
-        df = load_dataset(DATASET_REGISTRY[dataset_name], data_dir=data_dir, split="test").to_pandas()
+        logger.info(
+            f"Loading dataset: {DATASET_REGISTRY[dataset_name]} (data_dir: {data_dir})"
+        )
+        df = load_dataset(
+            DATASET_REGISTRY[dataset_name], data_dir=data_dir, split="test"
+        ).to_pandas()
 
         if fraction < 1.0:
             original_len = len(df)
             df = df.sample(frac=fraction, random_state=self.config.seed)
-            logger.info(f"Sampled {len(df)} samples ({fraction:.2f}) from original {original_len} samples.")
+            logger.info(
+                f"Sampled {len(df)} samples ({fraction:.2f}) from original {original_len} samples."
+            )
 
         logger.info(f"Dataset loaded with {len(df)} entries.")
 
         # if we have needle in a haystack, we need to insert it in the context
         if self.config.dataset == "needle_in_haystack":
             df = insert_needle_in_haystack(
-                df, self.pipeline.tokenizer, self.config.max_context_length, self.config.needle_depth
+                df,
+                self.pipeline.tokenizer,
+                self.config.max_context_length,
+                self.config.needle_depth,
             )
 
         if isinstance(self.press, FinchPress):
@@ -332,12 +389,18 @@ class EvaluationRunner:
                 raise ValueError("FinchPress requires query_aware to be set to True")
             # FinchPress uses a delimiter token to separate context and question
             # So we need to update the tokenizer and the model embeddings.
-            logger.info("FinchPress detected, updating model and tokenizer with delimiter token.")
-            self.press.update_model_and_tokenizer(self.pipeline.model, self.pipeline.tokenizer)  # type: ignore[attr-defined]
+            logger.info(
+                "FinchPress detected, updating model and tokenizer with delimiter token."
+            )
+            self.press.update_model_and_tokenizer(
+                self.pipeline.model, self.pipeline.tokenizer
+            )  # type: ignore[attr-defined]
             df["context"] = df["context"] + self.press.delimiter_token  # type: ignore[attr-defined, index]
 
         if self.config.query_aware:
-            logger.info("Query-aware compression: including question in context for compression.")
+            logger.info(
+                "Query-aware compression: including question in context for compression."
+            )
             df["context"] = df["context"] + df["question"]  # type: ignore[index]
             df["question"] = ""  # type: ignore[index]
 
@@ -360,18 +423,26 @@ class EvaluationRunner:
 
         if isinstance(self.press, ObservedAttentionPress):
             model_kwargs["attn_implementation"] = "eager"
-            logger.info("ObservedAttentionPress detected, setting attn_implementation to 'eager'.")
+            logger.info(
+                "ObservedAttentionPress detected, setting attn_implementation to 'eager'."
+            )
         else:
             try:
                 import flash_attn  # noqa: F401
 
                 model_kwargs["attn_implementation"] = "flash_attention_2"
-                logger.info("Flash Attention 2 detected, setting attn_implementation to 'flash_attention_2'.")
+                logger.info(
+                    "Flash Attention 2 detected, setting attn_implementation to 'flash_attention_2'."
+                )
             except ImportError:
-                logger.info("Flash Attention 2 not available, using default attn_implementation.")
+                logger.info(
+                    "Flash Attention 2 not available, using default attn_implementation."
+                )
                 pass
 
-        logger.info(f"Loading model pipeline for: {model_name} on device: {device} with model_kwargs: {model_kwargs}")
+        logger.info(
+            f"Loading model pipeline for: {model_name} on device: {device} with model_kwargs: {model_kwargs}"
+        )
         pipeline_kwargs = {
             "model": model_name,
             "model_kwargs": model_kwargs,
@@ -395,8 +466,12 @@ class EvaluationRunner:
         self.df["predicted_answer"] = None  # type: ignore[index]
 
         if isinstance(self.press, DecodingPress):
-            logger.info("DecodingPress detected, running inference for each context-question pair.")
-            for index, row in tqdm(self.df.iterrows(), total=len(self.df), desc="Running Inference"):
+            logger.info(
+                "DecodingPress detected, running inference for each context-question pair."
+            )
+            for index, row in tqdm(
+                self.df.iterrows(), total=len(self.df), desc="Running Inference"
+            ):
                 context = row["context"]
                 question = row["question"]
                 answer_prefix = row["answer_prefix"]
@@ -414,17 +489,21 @@ class EvaluationRunner:
 
         else:
             df_context_grouped = self.df.groupby("context")  # type: ignore[union-attr]
-            assert all(
-                df_context_grouped["answer_prefix"].nunique() == 1
-            ), "Inconsistent 'answer_prefix' within the same context group detected."
+            assert all(df_context_grouped["answer_prefix"].nunique() == 1), (
+                "Inconsistent 'answer_prefix' within the same context group detected."
+            )
 
             logger.info("Starting inference...")
             for context, df_group in tqdm(
-                df_context_grouped, total=self.df["context"].nunique(), desc="Running Inference"
+                df_context_grouped,
+                total=self.df["context"].nunique(),
+                desc="Running Inference",
             ):  # type: ignore[union-attr]
                 questions = df_group["question"].to_list()
                 # Use max_new_tokens from config, or fallback to dataset's default for the task
-                max_new_tokens = self.config.max_new_tokens or df_group["max_new_tokens"].iloc[0]
+                max_new_tokens = (
+                    self.config.max_new_tokens or df_group["max_new_tokens"].iloc[0]
+                )
                 answer_prefix = df_group["answer_prefix"].iloc[0]
 
                 output = self.pipeline(  # type: ignore[misc]
@@ -454,7 +533,9 @@ class EvaluationRunner:
             The full path including filename to save the CSV.
         """
         if save_filename.exists():
-            logger.warning(f"Results CSV already exists at {save_filename}. Overwriting.")
+            logger.warning(
+                f"Results CSV already exists at {save_filename}. Overwriting."
+            )
 
         self.df[list(set(self.df.columns) - set(["context"]))].to_csv(
             str(save_filename), index=False
@@ -522,7 +603,9 @@ class CliEntryPoint:
     2. Command-line arguments (highest priority)
     """
 
-    def __call__(self, config_file: Optional[str] = "./evaluate_config.yaml", **cli_overrides):
+    def __call__(
+        self, config_file: Optional[str] = "./evaluate_config.yaml", **cli_overrides
+    ):
         """
         Builds the configuration and runs the evaluation.
 
@@ -548,7 +631,9 @@ class CliEntryPoint:
             config = EvaluationConfig(**final_args)
         except TypeError as e:
             # Provide a user-friendly error for bad arguments.
-            print(f"Error: Invalid configuration argument provided. {e}", file=sys.stderr)
+            print(
+                f"Error: Invalid configuration argument provided. {e}", file=sys.stderr
+            )
             sys.exit(1)
 
         runner = EvaluationRunner(config)

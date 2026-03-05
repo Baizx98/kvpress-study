@@ -2,15 +2,25 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from benchmarks.aime25.calculate_metrics import calculate_metrics as aime25_scorer
-from benchmarks.infinite_bench.calculate_metrics import calculate_metrics as infinite_bench_scorer
+from benchmarks.infinite_bench.calculate_metrics import (
+    calculate_metrics as infinite_bench_scorer,
+)
 from benchmarks.longbench.calculate_metrics import calculate_metrics as longbench_scorer
-from benchmarks.longbench.calculate_metrics import calculate_metrics_e as longbench_scorer_e
-from benchmarks.longbenchv2.calculate_metrics import calculate_metrics as longbenchv2_scorer
+from benchmarks.longbench.calculate_metrics import (
+    calculate_metrics_e as longbench_scorer_e,
+)
+from benchmarks.longbenchv2.calculate_metrics import (
+    calculate_metrics as longbenchv2_scorer,
+)
 from benchmarks.loogle.calculate_metrics import calculate_metrics as loogle_scorer
 from benchmarks.math500.calculate_metrics import calculate_metrics as math500_scorer
-from benchmarks.needle_in_haystack.calculate_metrics import calculate_metrics as needle_in_haystack_scorer
+from benchmarks.needle_in_haystack.calculate_metrics import (
+    calculate_metrics as needle_in_haystack_scorer,
+)
 from benchmarks.ruler.calculate_metrics import calculate_metrics as ruler_scorer
-from benchmarks.zero_scrolls.calculate_metrics import calculate_metrics as zero_scrolls_scorer
+from benchmarks.zero_scrolls.calculate_metrics import (
+    calculate_metrics as zero_scrolls_scorer,
+)
 
 from kvpress import (
     AdaKVPress,
@@ -39,6 +49,8 @@ from kvpress import (
     TOVAPress,
     CURPress,
     LagKVPress,
+    BlockWisePress,
+    BlockScorePress,
 )
 
 # These dictionaries define the available datasets, scorers, and KVPress methods for evaluation.
@@ -74,9 +86,13 @@ PRESS_REGISTRY = {
     "adakv_snapkv": AdaKVPress(SnapKVPress()),
     "block_keydiff": BlockPress(press=KeyDiffPress(), block_size=128),
     "chunkkv": ChunkKVPress(press=SnapKVPress(), chunk_length=20),
-    "critical_adakv_expected_attention": CriticalAdaKVPress(ExpectedAttentionPress(use_vnorm=False)),
+    "critical_adakv_expected_attention": CriticalAdaKVPress(
+        ExpectedAttentionPress(use_vnorm=False)
+    ),
     "critical_adakv_snapkv": CriticalAdaKVPress(SnapKVPress()),
-    "critical_expected_attention": CriticalKVPress(ExpectedAttentionPress(use_vnorm=False)),
+    "critical_expected_attention": CriticalKVPress(
+        ExpectedAttentionPress(use_vnorm=False)
+    ),
     "critical_snapkv": CriticalKVPress(SnapKVPress()),
     "cur": CURPress(),
     "duo_attention": DuoAttentionPress(),
@@ -108,7 +124,10 @@ PRESS_REGISTRY = {
     "decoding_streaming_llm": DecodingPress(base_press=StreamingLLMPress()),
     "decoding_tova": DecodingPress(base_press=TOVAPress()),
     "decoding_qfilter": DecodingPress(base_press=QFilterPress()),
-    "decoding_adakv_expected_attention_e2": DecodingPress(base_press=AdaKVPress(ExpectedAttentionPress(epsilon=1e-2))),
+    "decoding_adakv_expected_attention_e2": DecodingPress(
+        base_press=AdaKVPress(ExpectedAttentionPress(epsilon=1e-2))
+    ),
     "decoding_adakv_snapkv": DecodingPress(base_press=AdaKVPress(SnapKVPress())),
     "decoding_keydiff": DecodingPress(base_press=KeyDiffPress()),
+    "block_wise": BlockWisePress(press=BlockScorePress()),
 }
