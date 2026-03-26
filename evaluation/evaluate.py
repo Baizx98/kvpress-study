@@ -30,6 +30,7 @@ from kvpress import (
     ThinKPress,
     ThresholdPress,
     BlockWisePress,
+    DualPhasePerLayerPress,
 )
 
 logger = logging.getLogger(__name__)
@@ -315,6 +316,17 @@ class EvaluationRunner:
             press.key_channel_compression_ratio = key_channel_compression_ratio
             logger.info(
                 f"Set ThinKPress key_channel_compression_ratio to {key_channel_compression_ratio}"
+            )
+        elif isinstance(press, DualPhasePerLayerPress):
+            if self.config.compression_interval is not None:
+                press.compression_interval = self.config.compression_interval
+
+            # Simplest behavior: use compression_ratio as default for all layers/phases.
+            press.default_phase_ratios = [compression_ratio, compression_ratio]
+            press.layer_phase_ratios = {}
+
+            logger.info(
+                f"Set DualPhasePerLayerPress compression_ratio={compression_ratio}, compression_interval={press.compression_interval}"
             )
         elif isinstance(press, DecodingPress):
             press.compression_interval = (

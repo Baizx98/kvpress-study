@@ -51,6 +51,7 @@ from kvpress import (
     LagKVPress,
     BlockWisePress,
     BlockScorePress,
+    DualPhasePerLayerPress,
 )
 
 # These dictionaries define the available datasets, scorers, and KVPress methods for evaluation.
@@ -130,4 +131,9 @@ PRESS_REGISTRY = {
     "decoding_adakv_snapkv": DecodingPress(base_press=AdaKVPress(SnapKVPress())),
     "decoding_keydiff": DecodingPress(base_press=KeyDiffPress()),
     "block_wise": BlockWisePress(press=BlockScorePress()),
+    "dual_phase_per_layer": DualPhasePerLayerPress.init_class_vars(
+        layer_phase_ratios={},
+        block_size=16,
+        compression_interval=64,
+    ),
 }

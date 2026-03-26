@@ -29,6 +29,7 @@ from kvpress.presses.non_causal_attention_press import NonCausalAttnPress
 from kvpress.presses.observed_attention_press import ObservedAttentionPress
 from kvpress.presses.per_layer_compression_press import PerLayerCompressionPress
 from kvpress.presses.prefill_decoding_press import PrefillDecodingPress
+from kvpress.presses.dual_phase_per_layer_press import DualPhasePerLayerPress
 from kvpress.presses.pyramidkv_press import PyramidKVPress
 from kvpress.presses.qfilter_press import QFilterPress
 from kvpress.presses.random_press import RandomPress
@@ -78,6 +79,7 @@ __all__ = [
     "ExpectedAttentionStatsPress",
     "DecodingPress",
     "PrefillDecodingPress",
+    "DualPhasePerLayerPress",
     "CompactorPress",
     "LeverageScorePress",
     "NonCausalAttnPress",

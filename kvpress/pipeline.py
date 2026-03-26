@@ -13,6 +13,7 @@ from transformers.pipelines.base import GenericTensor
 
 from kvpress.presses.base_press import BasePress
 from kvpress.presses.decoding_press import DecodingPress
+from kvpress.presses.dual_phase_per_layer_press import DualPhasePerLayerPress
 from kvpress.presses.finch_press import FinchPress
 from kvpress.presses.key_rerotation_press import KeyRerotationPress
 from kvpress.presses.prefill_decoding_press import PrefillDecodingPress
@@ -223,7 +224,9 @@ class KVPressTextGenerationPipeline(Pipeline):
             logger.debug(f"Compressed Context Length: {cache.get_seq_length()}")
 
         # We only perform decoding compression if the press is a decoding or prefill decoding press
-        perform_decoding_compression = press is not None and isinstance(press, (DecodingPress, PrefillDecodingPress))
+        perform_decoding_compression = press is not None and isinstance(
+            press, (DecodingPress, PrefillDecodingPress, DualPhasePerLayerPress)
+        )
         if isinstance(press, ThresholdPress):
             perform_decoding_compression = press.decoding
         with press(self.model) if perform_decoding_compression else contextlib.nullcontext():
