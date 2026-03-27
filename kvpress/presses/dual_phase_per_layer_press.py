@@ -10,7 +10,6 @@ import torch.nn as nn
 from transformers import QuantizedCache
 
 from kvpress.presses.base_press import BasePress
-from kvpress.presses.block_score_press import BlockScorePress
 from kvpress.presses.block_wise_press import BlockWisePress
 from kvpress.utils import extract_keys_and_values
 
@@ -99,12 +98,8 @@ class DualPhasePerLayerPress(BasePress):
         assert len(default_phase_ratios) == 2, "default_phase_ratios must be [prefill_ratio, decode_ratio]"
         assert block_size > 0, "block_size must be > 0"
 
-        prefill_press = BlockWisePress(
-            press=BlockScorePress(compression_ratio=default_phase_ratios[0], block_size=block_size)
-        )
-        decode_press = BlockWisePress(
-            press=BlockScorePress(compression_ratio=default_phase_ratios[1], block_size=block_size)
-        )
+        prefill_press = BlockWisePress(compression_ratio=default_phase_ratios[0], block_size=block_size)
+        decode_press = BlockWisePress(compression_ratio=default_phase_ratios[1], block_size=block_size)
 
         prefill_layer_presses = dict(prefill_layer_presses or {})
         decode_layer_presses = dict(decode_layer_presses or {})
@@ -203,6 +198,7 @@ class DualPhasePerLayerPress(BasePress):
         self.layer_decode_steps = defaultdict(int)
 
     def _resolve_phase(self, hidden_states: torch.Tensor, kwargs: dict) -> PhaseName:
+        # TODO
         q_len = hidden_states.shape[1]
         return "prefill" if kwargs["cache_position"][-1] <= q_len else "decode"
 

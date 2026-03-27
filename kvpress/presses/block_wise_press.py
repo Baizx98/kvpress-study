@@ -6,9 +6,10 @@ import math
 import torch
 from torch import nn
 from torch.nn import functional as F
+from transformers.models.llama.modeling_llama import repeat_kv
 
 from kvpress.presses.base_press import BasePress
-from kvpress.presses.block_score_press import BlockScorePress
+from kvpress.utils import get_prerope_query_states
 
 
 @dataclass
@@ -28,30 +29,59 @@ class BlockWisePress(BasePress):
     block_size : int, default=1024
         Length of each block for independent compression.
     """
+    compression_ratio: float = 0.0
+    block_size: int = 16
 
-    press: BlockScorePress
+    def score(
+        self,
+        module: nn.Module,
+        hidden_states: torch.Tensor,
+        keys: torch.Tensor,
+        values: torch.Tensor,
+        attentions: torch.Tensor,
+        kwargs,
+    ) -> torch.Tensor:
+        """
+        Compute block-level query-aware attention scores and expand them back
+        to token-level importance scores.
+        """
 
-    def __post_init__(self):
-        assert isinstance(self.press, BlockScorePress), "BlockWisePress requires a BlockScorePress as input"
+        bsz, q_len, _ = hidden_states.shape
+        _, num_key_value_heads, key_len, head_dim = keys.shape
+        num_key_value_groups = module.config.num_attention_heads // num_key_value_heads
+        num_blocks = math.ceil(key_len / self.block_size)
+        pad_len = num_blocks * self.block_size - key_len
+        if pad_len > 0:
+            keys = F.pad(keys, (0, 0, 0, pad_len))
 
-    def post_init_from_model(self, model):
-        self.press.post_init_from_model(model)
+        keys_blocked = keys.view(
+            bsz,
+            num_key_value_heads,
+            num_blocks,
+            self.block_size,
+            head_dim,
+        )
+        block_keys = keys_blocked.mean(dim=3)
 
-    @property
-    def compression_ratio(self):
-        return self.press.compression_ratio
+        query_states = get_prerope_query_states(module, hidden_states)
+        if q_len > 1:
+            query_states = query_states.mean(dim=2, keepdim=True)
 
-    @compression_ratio.setter
-    def compression_ratio(self, value):
-        self.press.compression_ratio = value
+        block_keys = repeat_kv(block_keys, num_key_value_groups)
+        scale = 1.0 / math.sqrt(head_dim)
+        block_scores = torch.matmul(query_states, block_keys.transpose(-1, -2)) * scale
+        block_scores = block_scores.squeeze(2)
+        block_scores = block_scores.view(bsz, num_key_value_heads, num_key_value_groups, num_blocks)
+        block_scores = block_scores.mean(dim=2)
 
-    @property
-    def block_size(self):
-        return self.press.block_size
+        token_scores = block_scores.unsqueeze(-1).expand(-1, -1, -1, self.block_size)
+        token_scores = token_scores.reshape(
+            bsz,
+            num_key_value_heads,
+            num_blocks * self.block_size,
+        )
 
-    @block_size.setter
-    def block_size(self, value):
-        self.press.block_size = value
+        return token_scores[:, :, :key_len]
 
     def compress(
         self,
@@ -73,7 +103,7 @@ class BlockWisePress(BasePress):
         """
 
         # No compression
-        if self.press.compression_ratio == 0:
+        if self.compression_ratio == 0:
             return keys, values
 
         assert attentions is None, "BlockWisePress does not support attentions."
@@ -82,13 +112,13 @@ class BlockWisePress(BasePress):
 
         device = keys.device
         B, H_kv, kv_len, head_dim = keys.shape
-        block_size = self.press.block_size
+        block_size = self.block_size
 
         # ------------------------------------------------------------------
         # Step 1: Get token-level importance scores
         # (B, H_kv, kv_len)
         # ------------------------------------------------------------------
-        token_scores = self.press.score(
+        token_scores = self.score(
             module,
             hidden_states,
             keys,
@@ -98,22 +128,13 @@ class BlockWisePress(BasePress):
         )
 
         # ------------------------------------------------------------------
-        # Step 2: Reshape token scores into blocks
+        # Step 2: Build block-level scores without padding tail tokens.
         # ------------------------------------------------------------------
         num_blocks = (kv_len + block_size - 1) // block_size
-        pad_len = num_blocks * block_size - kv_len
-
-        if pad_len > 0:
-            token_scores = F.pad(token_scores, (0, pad_len))
-
-        # (B, H_kv, num_blocks, block_size)
-        block_token_scores = token_scores.view(B, H_kv, num_blocks, block_size)
-
-        # ------------------------------------------------------------------
-        # Step 3: One score per block (take first token in each block)
-        # ------------------------------------------------------------------
-        # (B, H_kv, num_blocks)
-        block_scores = block_token_scores[..., 0]
+        block_scores = torch.stack(
+            [token_scores[:, :, block_idx * block_size] for block_idx in range(num_blocks)],
+            dim=-1,
+        )
 
         # ------------------------------------------------------------------
         # Step 4: Aggregate over KV heads (head-agnostic compression)
@@ -122,11 +143,17 @@ class BlockWisePress(BasePress):
         block_scores = block_scores.mean(dim=1)
 
         # ------------------------------------------------------------------
-        # Step 5: Decide how many blocks to keep
+        # Step 5: Decide how many blocks to keep.
         # ------------------------------------------------------------------
-        n_kept_tokens = int(kv_len * (1 - self.press.compression_ratio))
-        n_kept_blocks = math.ceil(n_kept_tokens / block_size)
+        n_kept_blocks = math.ceil(num_blocks * (1 - self.compression_ratio))
+        
+        if n_kept_blocks <= 0:
+            return keys[:, :, :0], values[:, :, :0]
+
         n_kept_blocks = min(n_kept_blocks, num_blocks)
+
+        if n_kept_blocks == num_blocks:
+            return keys, values
 
         # ------------------------------------------------------------------
         # Step 6: Top-k block selection
@@ -138,21 +165,40 @@ class BlockWisePress(BasePress):
             dim=-1,
         ).indices
 
+        # Keep temporal order to preserve cache ordering after compression.
+        top_block_indices = top_block_indices.sort(dim=-1).values
+
         # ------------------------------------------------------------------
-        # Step 7: Map block indices -> token indices
+        # Step 7: Expand selected block indices to token indices.
+        # For each selected block, collect all real tokens (handle tail block correctly).
         # ------------------------------------------------------------------
-        # (block_size,)
-        offsets = torch.arange(block_size, device=device)
+        # Create mask to indicate which tokens belong to selected blocks.
+        # Shape: (B, kv_len)
+        mask = torch.zeros(B, kv_len, dtype=torch.bool, device=device)
+        
+        for batch_idx in range(B):
+            for block_offset in range(n_kept_blocks):
+                selected_block_idx = top_block_indices[batch_idx, block_offset].item()
+                token_start = selected_block_idx * block_size
+                token_end = min((selected_block_idx + 1) * block_size, kv_len)
+                mask[batch_idx, token_start:token_end] = True
 
-        # (B, n_kept_blocks, block_size)
-        token_indices = top_block_indices.unsqueeze(-1) * block_size + offsets
+        # Extract token indices from mask.
+        token_indices_list = []
+        expected_kept_len = None
+        for batch_idx in range(B):
+            token_idx = torch.where(mask[batch_idx])[0]
+            if expected_kept_len is None:
+                expected_kept_len = token_idx.numel()
+            elif token_idx.numel() != expected_kept_len:
+                raise ValueError(
+                    f"BlockWisePress got different kept token counts across batch items. "
+                    f"First batch: {expected_kept_len}, batch {batch_idx}: {token_idx.numel()}. "
+                    "Please use batch_size=1 or adjust settings."
+                )
+            token_indices_list.append(token_idx)
 
-        # (B, n_kept_blocks * block_size)
-        token_indices = token_indices.view(B, -1)
-
-        # Remove out-of-range tokens from last block
-        # token_indices = token_indices[token_indices < kv_len]
-        token_indices = token_indices.clamp(max=kv_len - 1)
+        token_indices = torch.stack(token_indices_list, dim=0)
 
         # ------------------------------------------------------------------
         # Step 8: Gather KV cache (same tokens for all KV heads)
@@ -162,7 +208,5 @@ class BlockWisePress(BasePress):
 
         keys = keys.gather(dim=2, index=gather_indices).contiguous()
         values = values.gather(dim=2, index=gather_indices).contiguous()
-
-        # print("compressed keys shape:", keys.shape)
 
         return keys, values
