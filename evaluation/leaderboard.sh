@@ -29,8 +29,8 @@ for press in "kvzap_linear" "kvzap_mlp"; do
   wait
 done
 
-# Loop 2: presses requiring to compress questions
-press_names=("snapkv" "adakv_snapkv" "finch" "chunkkv")
+# Loop 2: presses requiring question-aware compression (question appended to context)
+press_names=("snapkv" "adakv_snapkv" "finch" "chunkkv" "block_wise" "dual_phase_per_layer")
 for press in "${press_names[@]}"; do  
     python evaluate.py --dataset $dataset --data_dir $data_dir --model $model --press_name $press --compression_ratio 0.25  --output_dir $output_dir --device "cuda:0" --query_aware &
     python evaluate.py --dataset $dataset --data_dir $data_dir --model $model --press_name $press --compression_ratio 0.50  --output_dir $output_dir --device "cuda:1" --query_aware &

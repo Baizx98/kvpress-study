@@ -32,7 +32,7 @@ python evaluate.py --config_file <your_config.yaml>
 
 Customize your evaluation by editing `evaluate_config.yaml`. This allows you to flexibly configure a variety of settings, like the `fraction` of dataset to use (for quick testing) and the model arguments (e.g. for scaling RoPE). For complete parameter details, see the `evaluation_config.yaml`
 
-💡 Set `query_aware: true` to include the question in the context during compression. This enables query-aware compression as used in methods like SnapKV and FinchPress.
+💡 In this evaluation harness, `query_aware: true` means question-aware compression: the question is appended to the context before compression. This is the mode used for methods such as SnapKV, Finch, and block-wise question-aware variants.
 
 
 ### Available Presses and Datasets 

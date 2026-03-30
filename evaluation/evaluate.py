@@ -21,6 +21,7 @@ from tqdm import tqdm
 from transformers import FineGrainedFP8Config, Pipeline, pipeline
 
 from kvpress import (
+    ChunkKVPress,
     ComposedPress,
     DecodingPress,
     DuoAttentionPress,
@@ -31,9 +32,40 @@ from kvpress import (
     ThresholdPress,
     BlockWisePress,
     DualPhasePerLayerPress,
+    SnapKVPress,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _coerce_bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in {"1", "true", "yes", "y", "on"}
+    return bool(value)
+
+
+def _press_requires_question_aware(press) -> bool:
+    if press is None:
+        return False
+    if isinstance(press, (BlockWisePress, DualPhasePerLayerPress, SnapKVPress, ChunkKVPress, FinchPress)):
+        return True
+    if isinstance(press, ComposedPress):
+        return any(_press_requires_question_aware(sub_press) for sub_press in press.presses)
+    if hasattr(press, "press"):
+        return _press_requires_question_aware(press.press)
+    if hasattr(press, "base_press"):
+        return _press_requires_question_aware(press.base_press)
+    if hasattr(press, "prefilling_press"):
+        return _press_requires_question_aware(press.prefilling_press)
+    if hasattr(press, "prefill_press"):
+        return _press_requires_question_aware(press.prefill_press)
+    if hasattr(press, "decode_press"):
+        return _press_requires_question_aware(press.decode_press)
+    if hasattr(press, "decoding_press"):
+        return _press_requires_question_aware(press.decoding_press)
+    return False
 
 
 @dataclass
@@ -81,6 +113,8 @@ class EvaluationConfig:
 
     def __post_init__(self):
         """Validate configuration after initialization."""
+        self.query_aware = _coerce_bool(self.query_aware)
+
         # Validate dataset
         assert self.dataset in DATASET_REGISTRY, f"No dataset found for {self.dataset}"
         assert self.dataset in SCORER_REGISTRY, f"No scorer found for {self.dataset}"
@@ -358,6 +392,12 @@ class EvaluationRunner:
                 )
 
         self.press = press
+        if _press_requires_question_aware(press) and not self.config.query_aware:
+            self.config.query_aware = True
+            logger.info(
+                "Forcing `query_aware=True` for this press. In this evaluation harness, `query_aware` means "
+                "question-aware compression: the question is appended to the context before compression."
+            )
         # Set the press info in the config for saving to YAML
         self.config.press_init_command = str(press)
         logger.info(f"KV Press '{press_name}' setup.")
@@ -411,7 +451,7 @@ class EvaluationRunner:
 
         if self.config.query_aware:
             logger.info(
-                "Query-aware compression: including question in context for compression."
+                "Question-aware compression: including the question in the context before compression."
             )
             df["context"] = df["context"] + df["question"]  # type: ignore[index]
             df["question"] = ""  # type: ignore[index]

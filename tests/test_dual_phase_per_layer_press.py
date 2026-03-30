@@ -215,3 +215,56 @@ def test_partial_tail_block_is_kept_to_preserve_consistent_cache_length():
 
     assert compressed_keys.shape[2] == 6
     assert compressed_values.shape[2] == 6
+
+
+def test_block_wise_press_builds_block_summary_cache():
+    press = BlockWisePress(compression_ratio=0.5, block_size=2, min_q_window=1, max_q_window=4)
+    layer0 = DummyModule(layer_idx=0)
+    keys, values = make_kv(seq_len=8)
+
+    press.compress(
+        layer0,
+        make_hidden_states(8),
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+    )
+
+    assert layer0.layer_idx in press.last_block_summary
+    summary = press.last_block_summary[layer0.layer_idx]
+    assert summary["mean_keys"].shape[2] > 0
+    assert summary["peak_keys"].shape == summary["mean_keys"].shape
+
+
+def test_dual_phase_press_records_block_states():
+    press = build_press(
+        layer_phase_ratios={0: [0.0, 0.5]},
+        layer_phase_cold_ratios={0: [0.0, 0.5]},
+    )
+    layer0 = DummyModule(layer_idx=0)
+
+    class FakeCacheLayer:
+        def __init__(self, keys, values):
+            self.keys = keys
+            self.values = values
+
+    class FakeCache:
+        def __init__(self, keys, values):
+            self.layers = [FakeCacheLayer(keys, values)]
+
+    keys, values = make_kv(seq_len=8)
+    cache = FakeCache(keys, values)
+    kwargs = {
+        "hidden_states": make_hidden_states(1),
+        "past_key_values": cache,
+        "cache_position": torch.tensor([10]),
+    }
+    press.forward_hook(layer0, [], kwargs, [None, None])
+
+    states = press.layer_block_states[layer0.layer_idx]
+    assert "active" in states
+    assert "resident_gpu" in states
+    assert "permanently_deleted" in states
+    assert "offloaded_cpu" in states
+    assert "prefetch_to_gpu" in states

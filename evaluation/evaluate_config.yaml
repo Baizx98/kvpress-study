@@ -15,7 +15,7 @@ threshold: null                                   # For ThresholdPress
 fraction: 0.05                                    # Fraction of dataset to evaluate (0.0 to 1.0), keep small for quick testing
 max_new_tokens: null                              # Maximum new tokens to generate (null = use dataset default)
 max_context_length: null                          # Maximum context length (null = use model maximum)
-query_aware: false                                # Whether to include question in context for query-aware compression
+query_aware: true                                 # Here `query_aware` means question-aware: append the question to the context before compression
 needle_depth: null                                # Depth (int or list of ints) percentage of the needle in the haystack (0 to 100), only for needle_in_haystack dataset
 block_size: 16
 
