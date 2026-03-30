@@ -1,22 +1,28 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import dataclass
-
 import torch
 from torch import nn
 
-from kvpress.presses.base_press import BasePress
-from kvpress.presses.block_score_press import BlockScorePress
 from kvpress.presses.block_wise_press import BlockWisePress
 from kvpress.presses.dual_phase_per_layer_press import DualPhasePerLayerPress
 
 
+class DummyConfig:
+    def __init__(self, num_attention_heads: int, num_key_value_heads: int):
+        self.num_attention_heads = num_attention_heads
+        self.num_key_value_heads = num_key_value_heads
+
+
 class DummyModule(nn.Module):
-    def __init__(self, layer_idx: int, head_dim: int = 4):
+    def __init__(self, layer_idx: int, hidden_dim: int = 16, num_heads: int = 4, num_kv_heads: int = 2):
         super().__init__()
         self.layer_idx = layer_idx
-        self.head_dim = head_dim
+        self.head_dim = hidden_dim // num_heads
+        self.config = DummyConfig(num_attention_heads=num_heads, num_key_value_heads=num_kv_heads)
+        self.q_proj = nn.Linear(hidden_dim, hidden_dim, bias=False)
+        with torch.no_grad():
+            self.q_proj.weight.copy_(torch.eye(hidden_dim))
 
 
 def make_kv(batch: int = 1, heads: int = 2, seq_len: int = 8, head_dim: int = 4):
@@ -25,14 +31,21 @@ def make_kv(batch: int = 1, heads: int = 2, seq_len: int = 8, head_dim: int = 4)
     return keys, values
 
 
-def build_press(layer_phase_ratios=None):
-    prefill_press = BlockWisePress(press=BlockScorePress(compression_ratio=0.0, block_size=2))
-    decode_press = BlockWisePress(press=BlockScorePress(compression_ratio=0.0, block_size=2))
+def make_hidden_states(seq_len: int, hidden_dim: int = 16):
+    return torch.arange(seq_len * hidden_dim, dtype=torch.float32).view(1, seq_len, hidden_dim)
+
+
+def build_press(layer_phase_ratios=None, layer_phase_cold_ratios=None):
+    prefill_press = BlockWisePress(compression_ratio=0.0, block_size=2, min_q_window=1, max_q_window=4)
+    decode_press = BlockWisePress(compression_ratio=0.0, block_size=2, min_q_window=1, max_q_window=4)
     return DualPhasePerLayerPress(
         prefill_press=prefill_press,
         decode_press=decode_press,
         layer_phase_ratios=layer_phase_ratios or {},
+        layer_phase_cold_ratios=layer_phase_cold_ratios or {},
         default_phase_ratios=[0.0, 0.0],
+        default_phase_cold_ratios=[0.0, 0.0],
+        decode_hidden_states_buffer_size=8,
     )
 
 
@@ -45,8 +58,8 @@ def test_compress_prefill_decode_split_with_per_layer_ratio():
     )
 
     keys, values = make_kv(seq_len=8)
-    hidden_states_prefill = torch.zeros((1, 8, 16), dtype=torch.float32)
-    hidden_states_decode = torch.zeros((1, 1, 16), dtype=torch.float32)
+    hidden_states_prefill = make_hidden_states(8)
+    hidden_states_decode = make_hidden_states(1)
 
     kwargs_prefill = {"cache_position": torch.tensor([8])}
     kwargs_decode = {"cache_position": torch.tensor([10])}
@@ -54,29 +67,26 @@ def test_compress_prefill_decode_split_with_per_layer_ratio():
     layer0 = DummyModule(layer_idx=0)
     layer1 = DummyModule(layer_idx=1)
 
-    # layer 0 prefill: 0.5 -> keep 4
     k0p, _ = press.compress(layer0, hidden_states_prefill, keys, values, None, kwargs_prefill)
     assert k0p.shape[2] == 4
 
-    # layer 0 decode: 0.25 -> keep 6
     k0d, _ = press.compress(layer0, hidden_states_decode, keys, values, None, kwargs_decode)
     assert k0d.shape[2] == 6
 
-    # layer 1 prefill: 0.0 -> keep 8
     k1p, _ = press.compress(layer1, hidden_states_prefill, keys, values, None, kwargs_prefill)
     assert k1p.shape[2] == 8
 
-    # layer 1 decode: 0.5 -> keep 4
     k1d, _ = press.compress(layer1, hidden_states_decode, keys, values, None, kwargs_decode)
     assert k1d.shape[2] == 4
 
 
 def test_phase_can_share_same_press_instance():
-    shared = BlockWisePress(press=BlockScorePress(compression_ratio=0.0, block_size=2))
+    shared = BlockWisePress(compression_ratio=0.0, block_size=2, min_q_window=1, max_q_window=4)
     press = DualPhasePerLayerPress(
         prefill_press=shared,
         decode_press=shared,
         layer_phase_ratios={0: [0.5, 0.25]},
+        decode_hidden_states_buffer_size=8,
     )
 
     keys, values = make_kv(seq_len=8)
@@ -84,7 +94,7 @@ def test_phase_can_share_same_press_instance():
 
     k_prefill, _ = press.compress(
         layer0,
-        torch.zeros((1, 8, 16), dtype=torch.float32),
+        make_hidden_states(8),
         keys,
         values,
         None,
@@ -92,7 +102,7 @@ def test_phase_can_share_same_press_instance():
     )
     k_decode, _ = press.compress(
         layer0,
-        torch.zeros((1, 1, 16), dtype=torch.float32),
+        make_hidden_states(1),
         keys,
         values,
         None,
@@ -107,7 +117,6 @@ def test_forward_hook_updates_ratio_dynamically():
     press = build_press(layer_phase_ratios={0: [0.5, 0.25]})
     layer0 = DummyModule(layer_idx=0)
 
-    # 用最小 fake cache 模拟 BasePress 约定的 cache 结构
     class FakeCacheLayer:
         def __init__(self, keys, values):
             self.keys = keys
@@ -121,7 +130,7 @@ def test_forward_hook_updates_ratio_dynamically():
     cache = FakeCache(keys, values)
 
     kwargs = {
-        "hidden_states": torch.zeros((1, 8, 16), dtype=torch.float32),
+        "hidden_states": make_hidden_states(8),
         "past_key_values": cache,
         "cache_position": torch.tensor([8]),
     }
@@ -129,6 +138,80 @@ def test_forward_hook_updates_ratio_dynamically():
 
     press.forward_hook(layer0, [], kwargs, output)
 
-    # prefill ratio=0.5 -> 8 变 4
     assert cache.layers[0].keys.shape[2] == 4
     assert cache.layers[0].values.shape[2] == 4
+
+
+def test_decode_cold_blocks_are_masked_without_physical_deletion():
+    press = build_press(
+        layer_phase_ratios={0: [0.0, 0.0]},
+        layer_phase_cold_ratios={0: [0.0, 0.5]},
+    )
+    layer0 = DummyModule(layer_idx=0)
+
+    class FakeCacheLayer:
+        def __init__(self, keys, values):
+            self.keys = keys
+            self.values = values
+
+    class FakeCache:
+        def __init__(self, keys, values):
+            self.layers = [FakeCacheLayer(keys, values)]
+
+    keys, values = make_kv(seq_len=8)
+    cache = FakeCache(keys, values)
+
+    kwargs = {
+        "hidden_states": make_hidden_states(1),
+        "past_key_values": cache,
+        "cache_position": torch.tensor([10]),
+    }
+    output = [None, None]
+
+    press.forward_hook(layer0, [], kwargs, output)
+
+    assert cache.layers[0].keys.shape[2] == 8
+    assert layer0.masked_key_indices is not None
+    batch_indices, head_indices, seq_indices = layer0.masked_key_indices
+    assert len(batch_indices) == len(head_indices) == len(seq_indices)
+    assert len(seq_indices) > 0
+
+
+def test_decode_can_mix_permanent_delete_and_temporary_cold_blocks():
+    press = build_press(
+        layer_phase_ratios={0: [0.0, 0.5]},
+        layer_phase_cold_ratios={0: [0.0, 0.5]},
+    )
+    layer0 = DummyModule(layer_idx=0)
+    keys, values = make_kv(seq_len=8)
+
+    compressed_keys, compressed_values = press.compress(
+        layer0,
+        make_hidden_states(4),
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([10])},
+    )
+
+    assert compressed_keys.shape[2] == 4
+    assert compressed_values.shape[2] == 4
+    assert layer0.masked_key_indices is not None
+
+
+def test_partial_tail_block_is_kept_to_preserve_consistent_cache_length():
+    press = BlockWisePress(compression_ratio=0.5, block_size=4, min_q_window=1, max_q_window=4)
+    layer0 = DummyModule(layer_idx=0)
+    keys, values = make_kv(seq_len=10)
+
+    compressed_keys, compressed_values = press.compress(
+        layer0,
+        make_hidden_states(10),
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([10])},
+    )
+
+    assert compressed_keys.shape[2] == 6
+    assert compressed_values.shape[2] == 6

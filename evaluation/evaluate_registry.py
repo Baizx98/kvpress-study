@@ -50,7 +50,6 @@ from kvpress import (
     CURPress,
     LagKVPress,
     BlockWisePress,
-    BlockScorePress,
     DualPhasePerLayerPress,
 )
 
@@ -130,7 +129,7 @@ PRESS_REGISTRY = {
     ),
     "decoding_adakv_snapkv": DecodingPress(base_press=AdaKVPress(SnapKVPress())),
     "decoding_keydiff": DecodingPress(base_press=KeyDiffPress()),
-    "block_wise": BlockWisePress(press=BlockScorePress()),
+    "block_wise": BlockWisePress(),
     "dual_phase_per_layer": DualPhasePerLayerPress.init_class_vars(
         layer_phase_ratios={},
         block_size=16,

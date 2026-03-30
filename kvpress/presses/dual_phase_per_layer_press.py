@@ -19,21 +19,11 @@ PhaseName = Literal["prefill", "decode"]
 @dataclass
 class DualPhasePerLayerPress(BasePress):
     """
-    最小化实现：
-    1) 区分 prefill / decode 两个阶段。
-    2) 区分每个 attention layer 的压缩率。
-    3) 两个阶段都使用 BlockWisePress。
+    Layer-aware / phase-aware block-wise compression with optional temporary cold blocks.
 
-    配置说明
-    -------
-    layer_phase_ratios: dict[int, list[float]]
-        形如 {layer_id: [prefill_ratio, decode_ratio]}。
-        - prefill_ratio: prefill 阶段该层压缩率
-        - decode_ratio: decode 阶段该层压缩率
-
-    prefill_press / decode_press:
-        阶段级默认 press；如果你希望某层使用独立 press，可通过
-        prefill_layer_presses / decode_layer_presses 覆盖。
+    Permanent pruning physically removes low-importance blocks from the KV cache.
+    Temporary cold blocks stay in the cache but are masked out for the current decode
+    iteration, so they can be reactivated later if their block heat increases again.
     """
 
     prefill_press: BlockWisePress
@@ -41,16 +31,15 @@ class DualPhasePerLayerPress(BasePress):
 
     layer_phase_ratios: dict[int, list[float]] = field(default_factory=dict)
     default_phase_ratios: list[float] = field(default_factory=lambda: [0.0, 0.0])
+    layer_phase_cold_ratios: dict[int, list[float]] = field(default_factory=dict)
+    default_phase_cold_ratios: list[float] = field(default_factory=lambda: [0.0, 0.0])
 
-    # 可选：每层覆盖阶段默认 press；不提供时沿用阶段默认 press
     prefill_layer_presses: dict[int, BlockWisePress] = field(default_factory=dict)
     decode_layer_presses: dict[int, BlockWisePress] = field(default_factory=dict)
 
-    # prefill和decode阶段的press的压缩粒度，一旦确定就不应该改变，否则会给内存管理带来麻烦
     block_size: int = 16
-
-    # decode 每层可配置压缩间隔（最小实现默认每步压缩）
     compression_interval: int = 1
+    decode_hidden_states_buffer_size: int = 32
 
     @property
     def compression_ratio(self) -> float:
@@ -65,11 +54,13 @@ class DualPhasePerLayerPress(BasePress):
     def __post_init__(self):
         assert self.compression_interval > 0, "compression_interval must be > 0"
         assert len(self.default_phase_ratios) == 2, "default_phase_ratios must be [prefill_ratio, decode_ratio]"
-        self.layer_decode_steps = defaultdict(int)
-
-        # 基础类型约束，避免把 score press 直接传进来
+        assert len(self.default_phase_cold_ratios) == 2, "default_phase_cold_ratios must be [prefill_cold, decode_cold]"
+        assert self.decode_hidden_states_buffer_size > 0, "decode_hidden_states_buffer_size must be > 0"
         assert isinstance(self.prefill_press, BlockWisePress), "prefill_press must be BlockWisePress"
         assert isinstance(self.decode_press, BlockWisePress), "decode_press must be BlockWisePress"
+
+        self.layer_decode_steps = defaultdict(int)
+        self.decode_hidden_states_buffer = defaultdict(list)
 
     @classmethod
     def init_class_vars(
@@ -80,43 +71,37 @@ class DualPhasePerLayerPress(BasePress):
         compression_interval: int = 1,
         prefill_layer_presses: Optional[dict[int, BlockWisePress]] = None,
         decode_layer_presses: Optional[dict[int, BlockWisePress]] = None,
+        layer_phase_cold_ratios: Optional[dict[int, list[float]]] = None,
+        default_phase_cold_ratios: Optional[list[float]] = None,
+        decode_hidden_states_buffer_size: int = 32,
     ) -> "DualPhasePerLayerPress":
-        """
-        类函数：集中初始化构造所需变量。
-
-        适用场景：
-        - 你只想提供每层 ratio 配置，让类自动创建默认的 block-wise press。
-        - 你想统一设置 block_size，避免外部重复构造 press 对象。
-
-        注意：
-        - 不会根据 layer_phase_ratios 自动创建每层独立 press。
-        - 每层 ratio 会在 compress 中动态注入当前激活的 press。
-        """
         if default_phase_ratios is None:
             default_phase_ratios = [0.0, 0.0]
+        if default_phase_cold_ratios is None:
+            default_phase_cold_ratios = [0.0, 0.0]
 
         assert len(default_phase_ratios) == 2, "default_phase_ratios must be [prefill_ratio, decode_ratio]"
+        assert len(default_phase_cold_ratios) == 2, "default_phase_cold_ratios must be [prefill_cold, decode_cold]"
         assert block_size > 0, "block_size must be > 0"
 
         prefill_press = BlockWisePress(compression_ratio=default_phase_ratios[0], block_size=block_size)
         decode_press = BlockWisePress(compression_ratio=default_phase_ratios[1], block_size=block_size)
-
-        prefill_layer_presses = dict(prefill_layer_presses or {})
-        decode_layer_presses = dict(decode_layer_presses or {})
 
         return cls(
             prefill_press=prefill_press,
             decode_press=decode_press,
             layer_phase_ratios=layer_phase_ratios,
             default_phase_ratios=default_phase_ratios,
-            prefill_layer_presses=prefill_layer_presses,
-            decode_layer_presses=decode_layer_presses,
+            layer_phase_cold_ratios=dict(layer_phase_cold_ratios or {}),
+            default_phase_cold_ratios=default_phase_cold_ratios,
+            prefill_layer_presses=dict(prefill_layer_presses or {}),
+            decode_layer_presses=dict(decode_layer_presses or {}),
             block_size=block_size,
             compression_interval=compression_interval,
+            decode_hidden_states_buffer_size=decode_hidden_states_buffer_size,
         )
 
     def post_init_from_model(self, model):
-        """初始化所有会被用到的 press，支持共享实例去重。"""
         seen = set()
         all_presses = [self.prefill_press, self.decode_press]
         all_presses.extend(self.prefill_layer_presses.values())
@@ -137,45 +122,59 @@ class DualPhasePerLayerPress(BasePress):
         attentions: torch.Tensor | None,
         kwargs: dict,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """
-        参考 PrefillDecodingPress 的分流思路：
-        - 先判定当前是 prefill 还是 decode
-        - 再按 layer 选择压缩率
-        - 最后调用对应阶段的 BlockWisePress.compress
-        """
         phase = self._resolve_phase(hidden_states, kwargs)
         layer_idx = self._resolve_layer_idx(module)
-
         active_press = self._resolve_active_press(layer_idx, phase)
         ratio = self._resolve_ratio(layer_idx, phase)
+        cold_ratio = self._resolve_cold_ratio(layer_idx, phase)
 
-        # 动态更新当前层当前阶段的压缩率
+        module.masked_key_indices = None
+
         original_ratio = active_press.compression_ratio
         active_press.compression_ratio = ratio
 
         try:
-            return active_press.compress(module, hidden_states, keys, values, attentions, kwargs)  # type: ignore[arg-type]
+            if phase == "prefill":
+                return active_press.compress(module, hidden_states, keys, values, attentions, kwargs)  # type: ignore[arg-type]
+
+            plan = active_press.build_block_plan(
+                module,
+                hidden_states,
+                keys,
+                values,
+                attentions,
+                kwargs,
+                compression_ratio=ratio,
+            )
+            keys, values = active_press.gather_by_token_indices(keys, values, plan["token_indices"])
+
+            if cold_ratio > 0 and keys.shape[2] > 0:
+                self._apply_temporary_cold_mask(module, active_press, hidden_states, keys, values, kwargs, cold_ratio)
+
+            return keys, values
         finally:
             active_press.compression_ratio = original_ratio
 
     def forward_hook(self, module: nn.Module, input: list[torch.Tensor], kwargs: dict, output: list):
-        """
-        在 hook 中动态更新参数并执行压缩。
-
-        说明：
-        - 不走 BasePress 的 prefill-only 默认逻辑，直接在此处理 prefill+decode。
-        - 返回值仍保持 BasePress 约定：只更新 cache，output 原样返回。
-        """
         hidden_states = kwargs["hidden_states"]
         cache = kwargs["past_key_values"]
         layer_idx = self._resolve_layer_idx(module)
         phase = self._resolve_phase(hidden_states, kwargs)
 
+        module.masked_key_indices = None
+
         if phase == "decode":
+            self.decode_hidden_states_buffer[layer_idx].append(hidden_states.detach().clone())
+            self.decode_hidden_states_buffer[layer_idx] = self.decode_hidden_states_buffer[layer_idx][
+                -self.decode_hidden_states_buffer_size :
+            ]
+
             self.layer_decode_steps[layer_idx] += 1
             if self.layer_decode_steps[layer_idx] < self.compression_interval:
                 return output
             self.layer_decode_steps[layer_idx] = 0
+
+            hidden_states = torch.cat(self.decode_hidden_states_buffer[layer_idx], dim=1)
 
         keys, values = extract_keys_and_values(cache, layer_idx)
         attentions = output[1] if len(output) > 1 and output[1] is not None else None
@@ -196,9 +195,66 @@ class DualPhasePerLayerPress(BasePress):
 
     def reset(self):
         self.layer_decode_steps = defaultdict(int)
+        self.decode_hidden_states_buffer = defaultdict(list)
+
+    def _apply_temporary_cold_mask(
+        self,
+        module: nn.Module,
+        active_press: BlockWisePress,
+        hidden_states: torch.Tensor,
+        keys: torch.Tensor,
+        values: torch.Tensor,
+        kwargs: dict,
+        cold_ratio: float,
+    ):
+        cold_plan = active_press.build_block_plan(
+            module,
+            hidden_states,
+            keys,
+            values,
+            attentions=None,
+            kwargs=kwargs,
+            compression_ratio=cold_ratio,
+        )
+
+        num_blocks = cold_plan["num_blocks"]
+        n_active_blocks = cold_plan["n_kept_blocks"]
+        if n_active_blocks >= num_blocks:
+            return
+
+        block_mask = torch.zeros(keys.shape[0], num_blocks, dtype=torch.bool, device=keys.device)
+        if n_active_blocks > 0:
+            block_mask.scatter_(1, cold_plan["kept_block_indices"], True)
+
+        cold_positions = []
+        for batch_idx in range(keys.shape[0]):
+            for block_idx in range(num_blocks):
+                if block_mask[batch_idx, block_idx]:
+                    continue
+                start = block_idx * active_press.block_size
+                end = min(start + active_press.block_size, keys.shape[2])
+                cold_positions.extend((batch_idx, token_idx) for token_idx in range(start, end))
+
+        if not cold_positions:
+            return
+
+        batch_indices = []
+        head_indices = []
+        seq_indices = []
+        num_heads = keys.shape[1]
+        for batch_idx, token_idx in cold_positions:
+            for head_idx in range(num_heads):
+                batch_indices.append(batch_idx)
+                head_indices.append(head_idx)
+                seq_indices.append(token_idx)
+
+        module.masked_key_indices = (
+            torch.tensor(batch_indices, dtype=torch.long, device=keys.device),
+            torch.tensor(head_indices, dtype=torch.long, device=keys.device),
+            torch.tensor(seq_indices, dtype=torch.long, device=keys.device),
+        )
 
     def _resolve_phase(self, hidden_states: torch.Tensor, kwargs: dict) -> PhaseName:
-        # TODO
         q_len = hidden_states.shape[1]
         return "prefill" if kwargs["cache_position"][-1] <= q_len else "decode"
 
@@ -208,7 +264,6 @@ class DualPhasePerLayerPress(BasePress):
         return self.decode_layer_presses.get(layer_idx, self.decode_press)
 
     def _resolve_layer_idx(self, module: nn.Module) -> int:
-        """兼容不同模块实现中的 layer_idx 表达。"""
         raw = getattr(module, "layer_idx")
         if isinstance(raw, torch.Tensor):
             return int(raw.item())
@@ -220,4 +275,12 @@ class DualPhasePerLayerPress(BasePress):
 
         ratio = ratios[0] if phase == "prefill" else ratios[1]
         assert 0 <= ratio < 1, f"compression ratio for layer {layer_idx} in phase {phase} must be in [0, 1)"
+        return ratio
+
+    def _resolve_cold_ratio(self, layer_idx: int, phase: PhaseName) -> float:
+        cold_ratios = self.layer_phase_cold_ratios.get(layer_idx, self.default_phase_cold_ratios)
+        assert len(cold_ratios) == 2, f"layer_phase_cold_ratios[{layer_idx}] must be [prefill_cold, decode_cold]"
+
+        ratio = cold_ratios[0] if phase == "prefill" else cold_ratios[1]
+        assert 0 <= ratio < 1, f"cold ratio for layer {layer_idx} in phase {phase} must be in [0, 1)"
         return ratio
