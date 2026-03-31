@@ -419,7 +419,9 @@ class EvaluationRunner:
 
         if fraction < 1.0:
             original_len = len(df)
-            df = df.sample(frac=fraction, random_state=self.config.seed)
+            sample_n = max(1, int(round(original_len * fraction)))
+            sample_n = min(sample_n, original_len)
+            df = df.sample(n=sample_n, random_state=self.config.seed)
             logger.info(
                 f"Sampled {len(df)} samples ({fraction:.2f}) from original {original_len} samples."
             )

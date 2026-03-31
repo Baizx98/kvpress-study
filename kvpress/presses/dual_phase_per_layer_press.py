@@ -73,6 +73,7 @@ class DualPhasePerLayerPress(BasePress):
 
         self.layer_decode_steps = defaultdict(int)
         self.layer_score_steps = defaultdict(int)
+        self.layer_decode_generated_tokens = defaultdict(int)
         self.decode_hidden_states_buffer = defaultdict(list)
         self.layer_block_states = defaultdict(dict)
         self.layer_cached_masks = defaultdict(lambda: None)
@@ -142,6 +143,8 @@ class DualPhasePerLayerPress(BasePress):
         ratio = self._resolve_ratio(layer_idx, phase)
         cold_ratio = self._resolve_cold_ratio(layer_idx, phase)
 
+        force_refresh_summary = bool(kwargs.get("_force_refresh_summary", False))
+
         if phase == "prefill":
             original_ratio = active_press.compression_ratio
             active_press.compression_ratio = ratio
@@ -152,7 +155,6 @@ class DualPhasePerLayerPress(BasePress):
             finally:
                 active_press.compression_ratio = original_ratio
 
-        force_refresh_summary = True
         plan = active_press.build_block_plan(
             module,
             hidden_states,
@@ -175,7 +177,7 @@ class DualPhasePerLayerPress(BasePress):
             attentions,
             kwargs,
             compression_ratio=cold_ratio,
-            force_refresh_summary=True,
+            force_refresh_summary=force_refresh_summary,
         )
 
         active_block_indices = retained_plan["kept_block_indices"]
@@ -209,9 +211,20 @@ class DualPhasePerLayerPress(BasePress):
 
         self.layer_decode_steps[layer_idx] += 1
         self.layer_score_steps[layer_idx] += 1
+        self.layer_decode_generated_tokens[layer_idx] += hidden_states.shape[1]
 
-        refresh_scores = self.layer_score_steps[layer_idx] >= self.score_refresh_interval or not self.layer_block_states[layer_idx]
-        refresh_compression = self.layer_decode_steps[layer_idx] >= self.compression_interval or not self.layer_block_states[layer_idx]
+        new_block_formed = self.layer_decode_generated_tokens[layer_idx] % self.block_size == 0
+
+        refresh_scores = (
+            new_block_formed
+            or self.layer_score_steps[layer_idx] >= self.score_refresh_interval
+            or not self.layer_block_states[layer_idx]
+        )
+        refresh_compression = (
+            new_block_formed
+            or self.layer_decode_steps[layer_idx] >= self.compression_interval
+            or not self.layer_block_states[layer_idx]
+        )
 
         if not refresh_scores:
             module.masked_key_indices = self.layer_cached_masks[layer_idx]
@@ -226,7 +239,9 @@ class DualPhasePerLayerPress(BasePress):
         attentions = output[1] if len(output) > 1 and output[1] is not None else None
 
         if refresh_compression:
-            keys, values = self.compress(module, buffered_hidden_states, keys, values, attentions, kwargs)
+            compression_kwargs = dict(kwargs)
+            compression_kwargs["_force_refresh_summary"] = new_block_formed
+            keys, values = self.compress(module, buffered_hidden_states, keys, values, attentions, compression_kwargs)
             self._write_back_cache(cache, layer_idx, keys, values)
         else:
             active_press = self._resolve_active_press(layer_idx, "decode")
@@ -238,7 +253,7 @@ class DualPhasePerLayerPress(BasePress):
                 attentions,
                 kwargs,
                 compression_ratio=self._resolve_cold_ratio(layer_idx, "decode"),
-                force_refresh_summary=True,
+                force_refresh_summary=new_block_formed,
             )
             active_block_indices = retained_plan["kept_block_indices"]
             self.layer_cached_masks[layer_idx] = self._build_mask_from_active_blocks(
@@ -260,6 +275,7 @@ class DualPhasePerLayerPress(BasePress):
     def reset(self):
         self.layer_decode_steps = defaultdict(int)
         self.layer_score_steps = defaultdict(int)
+        self.layer_decode_generated_tokens = defaultdict(int)
         self.decode_hidden_states_buffer = defaultdict(list)
         self.layer_block_states = defaultdict(dict)
         self.layer_cached_masks = defaultdict(lambda: None)

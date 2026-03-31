@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass, field
 import math
-from typing import Any
+from typing import Any, Literal
 
 import torch
 from torch import nn
@@ -30,8 +30,12 @@ class BlockWisePress(BasePress):
     q_window_scale: float = 4.0
     q_mean_weight: float = 0.5
     block_peak_weight: float = 0.5
+    head_scoring_method: Literal["max", "topk_mean", "percentile"] = "max"
+    head_topk_ratio: float = 0.25
+    head_percentile: float = 0.9
     head_select_ratio: float = 1.0
     head_weight_exponent: float = 1.0
+    head_redundancy_alpha: float = 0.0
     eps: float = 1e-6
     require_question_aware: bool = True
 
@@ -47,8 +51,12 @@ class BlockWisePress(BasePress):
         assert self.q_window_scale > 0, "q_window_scale must be > 0"
         assert 0 <= self.q_mean_weight <= 1, "q_mean_weight must be in [0, 1]"
         assert 0 <= self.block_peak_weight <= 1, "block_peak_weight must be in [0, 1]"
+        assert self.head_scoring_method in {"max", "topk_mean", "percentile"}, "invalid head_scoring_method"
+        assert 0 < self.head_topk_ratio <= 1, "head_topk_ratio must be in (0, 1]"
+        assert 0 <= self.head_percentile <= 1, "head_percentile must be in [0, 1]"
         assert 0 < self.head_select_ratio <= 1, "head_select_ratio must be in (0, 1]"
         assert self.head_weight_exponent >= 0, "head_weight_exponent must be >= 0"
+        assert 0 <= self.head_redundancy_alpha <= 1, "head_redundancy_alpha must be in [0, 1]"
 
     def _resolve_layer_idx(self, module: nn.Module) -> int:
         raw = getattr(module, "layer_idx", 0)
@@ -67,8 +75,46 @@ class BlockWisePress(BasePress):
         peak_scores = scores.max(dim=-2).values
         return self.q_mean_weight * mean_scores + (1.0 - self.q_mean_weight) * peak_scores
 
-    def _compute_head_weights(self, block_scores_per_head: torch.Tensor) -> torch.Tensor:
-        head_strength = block_scores_per_head.max(dim=-1).values.clamp_min(0)
+    def _score_heads(self, block_scores_per_head: torch.Tensor) -> torch.Tensor:
+        if block_scores_per_head.shape[-1] == 0:
+            return block_scores_per_head.new_zeros(block_scores_per_head.shape[:2])
+
+        if self.head_scoring_method == "max":
+            return block_scores_per_head.max(dim=-1).values
+
+        if self.head_scoring_method == "topk_mean":
+            k = max(1, int(math.ceil(block_scores_per_head.shape[-1] * self.head_topk_ratio)))
+            return block_scores_per_head.topk(k, dim=-1).values.mean(dim=-1)
+
+        sorted_scores = block_scores_per_head.sort(dim=-1).values
+        index = int(round((sorted_scores.shape[-1] - 1) * self.head_percentile))
+        index = max(0, min(index, sorted_scores.shape[-1] - 1))
+        return sorted_scores[..., index]
+
+    def _apply_head_redundancy_penalty(
+        self,
+        head_strength: torch.Tensor,
+        block_summary: dict[str, torch.Tensor],
+    ) -> torch.Tensor:
+        if self.head_redundancy_alpha == 0 or head_strength.shape[1] <= 1:
+            return head_strength
+
+        mean_keys = block_summary["mean_keys"]
+        flattened = mean_keys.reshape(mean_keys.shape[0], mean_keys.shape[1], -1)
+        flattened = flattened / flattened.norm(dim=-1, keepdim=True).clamp_min(self.eps)
+        similarity = torch.matmul(flattened, flattened.transpose(1, 2)).abs()
+
+        eye = torch.eye(similarity.shape[-1], device=similarity.device, dtype=similarity.dtype).unsqueeze(0)
+        redundancy = ((similarity * (1 - eye)).sum(dim=-1) / max(similarity.shape[-1] - 1, 1)).clamp(0, 1)
+        return head_strength * (1.0 - self.head_redundancy_alpha * redundancy)
+
+    def _compute_head_weights(
+        self,
+        block_scores_per_head: torch.Tensor,
+        block_summary: dict[str, torch.Tensor],
+    ) -> torch.Tensor:
+        head_strength = self._score_heads(block_scores_per_head).clamp_min(0)
+        head_strength = self._apply_head_redundancy_penalty(head_strength, block_summary)
         if self.head_weight_exponent != 1.0:
             head_strength = head_strength.pow(self.head_weight_exponent)
 
@@ -187,7 +233,7 @@ class BlockWisePress(BasePress):
         block_peak_scores = self._aggregate_over_queries(peak_scores)
         block_scores_per_head = (1.0 - self.block_peak_weight) * block_mean_scores + self.block_peak_weight * block_peak_scores
 
-        head_weights = self._compute_head_weights(block_scores_per_head)
+        head_weights = self._compute_head_weights(block_scores_per_head, summary)
         block_scores = (block_scores_per_head * head_weights.unsqueeze(-1)).sum(dim=1)
 
         layer_idx = self._resolve_layer_idx(module)

@@ -237,6 +237,57 @@ def test_block_wise_press_builds_block_summary_cache():
     assert summary["peak_keys"].shape == summary["mean_keys"].shape
 
 
+def test_block_wise_press_supports_multiple_head_scoring_methods():
+    keys, values = make_kv(seq_len=8)
+    layer0 = DummyModule(layer_idx=0)
+    hidden_states = make_hidden_states(8)
+
+    for method in ["max", "topk_mean", "percentile"]:
+        press = BlockWisePress(
+            compression_ratio=0.5,
+            block_size=2,
+            min_q_window=1,
+            max_q_window=4,
+            head_scoring_method=method,
+            head_topk_ratio=0.5,
+            head_percentile=0.5,
+        )
+        result_keys, result_values = press.compress(
+            layer0,
+            hidden_states,
+            keys,
+            values,
+            None,
+            {"cache_position": torch.tensor([8])},
+        )
+        assert result_keys.shape[2] == 4
+        assert result_values.shape[2] == 4
+
+
+def test_block_wise_press_head_redundancy_penalty_is_supported():
+    keys, values = make_kv(seq_len=8)
+    layer0 = DummyModule(layer_idx=0)
+    press = BlockWisePress(
+        compression_ratio=0.5,
+        block_size=2,
+        min_q_window=1,
+        max_q_window=4,
+        head_redundancy_alpha=0.5,
+    )
+
+    result_keys, result_values = press.compress(
+        layer0,
+        make_hidden_states(8),
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+    )
+
+    assert result_keys.shape[2] == 4
+    assert result_values.shape[2] == 4
+
+
 def test_dual_phase_press_records_block_states():
     press = build_press(
         layer_phase_ratios={0: [0.0, 0.5]},
@@ -268,3 +319,36 @@ def test_dual_phase_press_records_block_states():
     assert "permanently_deleted" in states
     assert "offloaded_cpu" in states
     assert "prefetch_to_gpu" in states
+
+
+def test_dual_phase_press_triggers_decode_compression_on_new_block_boundary():
+    press = build_press(layer_phase_ratios={0: [0.0, 0.5]}, layer_phase_cold_ratios={0: [0.0, 0.5]})
+    press.compression_interval = 100
+    press.score_refresh_interval = 100
+    layer0 = DummyModule(layer_idx=0)
+
+    class FakeCacheLayer:
+        def __init__(self, keys, values):
+            self.keys = keys
+            self.values = values
+
+    class FakeCache:
+        def __init__(self, keys, values):
+            self.layers = [FakeCacheLayer(keys, values)]
+
+    keys, values = make_kv(seq_len=3)
+    cache = FakeCache(keys, values)
+    output = [None, None]
+
+    for _ in range(2):
+        cache.layers[0].keys = torch.cat([cache.layers[0].keys, keys[:, :, :1]], dim=2)
+        cache.layers[0].values = torch.cat([cache.layers[0].values, values[:, :, :1]], dim=2)
+        kwargs = {
+            "hidden_states": make_hidden_states(1),
+            "past_key_values": cache,
+            "cache_position": torch.tensor([10]),
+        }
+        press.forward_hook(layer0, [], kwargs, output)
+
+    assert layer0.layer_idx in press.layer_block_states
+    assert press.layer_block_states[layer0.layer_idx]["active"].numel() >= 0
