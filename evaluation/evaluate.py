@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
 import json
 import logging
@@ -679,6 +681,15 @@ class CliEntryPoint:
         # Filter out None values from CLI overrides
         cli_args = {k: v for k, v in cli_overrides.items() if v is not None}
         final_args.update(cli_args)
+
+        # `needle_in_haystack` uses the base dataset config and should not inherit
+        # a default `data_dir` such as "4096" from the generic YAML config unless
+        # it was explicitly requested on the CLI.
+        if (
+            final_args.get("dataset") == "needle_in_haystack"
+            and "data_dir" not in cli_args
+        ):
+            final_args["data_dir"] = None
 
         # 4. Create and validate the final config object.
         try:

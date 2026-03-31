@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,10 +14,20 @@ FIGURE_DIR = ROOT / "figure"
 FIGURE_DIR.mkdir(exist_ok=True)
 
 
-def score_metrics(dataset: str, metrics: dict) -> float:
+def score_metrics(dataset: str, metrics) -> float:
+    if isinstance(metrics, (int, float)):
+        return float(metrics)
     if dataset == "loogle":
         task = next(iter(metrics))
         return float(metrics[task]["bert"])
+    if dataset == "needle_in_haystack":
+        if not metrics:
+            return 0.0
+        rouge_l_values = []
+        for item in metrics:
+            if isinstance(item, dict) and "rouge-l" in item and "f" in item["rouge-l"]:
+                rouge_l_values.append(float(item["rouge-l"]["f"]))
+        return sum(rouge_l_values) / len(rouge_l_values) if rouge_l_values else 0.0
 
     values = []
     for value in metrics.values():
@@ -31,20 +42,21 @@ def score_metrics(dataset: str, metrics: dict) -> float:
 def parse_result_dirs(results_dir: Path):
     records = []
     for metrics_path in results_dir.rglob("metrics.json"):
-        name = metrics_path.parent.name
         metrics = json.loads(metrics_path.read_text())
-        parts = name.split("__")
-        if len(parts) < 5:
+        config_path = metrics_path.parent / "config.yaml"
+        if not config_path.exists():
             continue
-
-        dataset = parts[0]
-        press = parts[3]
-        ratio = float(parts[4])
+        config = yaml.safe_load(config_path.read_text()) or {}
+        dataset = config.get("dataset")
+        press = config.get("press_name")
+        ratio = config.get("compression_ratio")
+        if dataset is None or press is None or ratio is None:
+            continue
         records.append(
             {
                 "dataset": dataset,
                 "press": press,
-                "ratio": ratio,
+                "ratio": float(ratio),
                 "score": score_metrics(dataset, metrics),
             }
         )

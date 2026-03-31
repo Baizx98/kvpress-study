@@ -8,7 +8,7 @@ FRACTION="${FRACTION:-0.1}"
 
 RATIOS=(0.3 0.5 0.7)
 PRESSES=("block_wise" "snapkv")
-GPUS=(0)
+GPUS=(0 1)
 
 run_eval() {
   local dataset="$1"
