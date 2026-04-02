@@ -37,8 +37,8 @@ def make_hidden_states(seq_len: int, hidden_dim: int = 16):
 
 
 def build_press(layer_phase_ratios=None, layer_phase_cold_ratios=None):
-    prefill_press = BlockWisePress(compression_ratio=0.0, block_size=2, min_q_window=1, max_q_window=4)
-    decode_press = BlockWisePress(compression_ratio=0.0, block_size=2, min_q_window=1, max_q_window=4)
+    prefill_press = BlockWisePress(compression_ratio=0.0, block_size=2, q_window_size=4)
+    decode_press = BlockWisePress(compression_ratio=0.0, block_size=2, q_window_size=4)
     return DualPhasePerLayerPress(
         prefill_press=prefill_press,
         decode_press=decode_press,
@@ -82,7 +82,7 @@ def test_compress_prefill_decode_split_with_per_layer_ratio():
 
 
 def test_phase_can_share_same_press_instance():
-    shared = BlockWisePress(compression_ratio=0.0, block_size=2, min_q_window=1, max_q_window=4)
+    shared = BlockWisePress(compression_ratio=0.0, block_size=2, q_window_size=4)
     press = DualPhasePerLayerPress(
         prefill_press=shared,
         decode_press=shared,
@@ -201,7 +201,7 @@ def test_decode_can_mix_permanent_delete_and_temporary_cold_blocks():
 
 
 def test_partial_tail_block_is_kept_to_preserve_consistent_cache_length():
-    press = BlockWisePress(compression_ratio=0.5, block_size=4, min_q_window=1, max_q_window=4)
+    press = BlockWisePress(compression_ratio=0.5, block_size=4, q_window_size=4)
     layer0 = DummyModule(layer_idx=0)
     keys, values = make_kv(seq_len=10)
 
@@ -219,7 +219,7 @@ def test_partial_tail_block_is_kept_to_preserve_consistent_cache_length():
 
 
 def test_block_wise_press_builds_block_summary_cache():
-    press = BlockWisePress(compression_ratio=0.5, block_size=2, min_q_window=1, max_q_window=4)
+    press = BlockWisePress(compression_ratio=0.5, block_size=2, q_window_size=4)
     layer0 = DummyModule(layer_idx=0)
     keys, values = make_kv(seq_len=8)
 
@@ -235,46 +235,17 @@ def test_block_wise_press_builds_block_summary_cache():
     assert layer0.layer_idx in press.last_block_summary
     summary = press.last_block_summary[layer0.layer_idx]
     assert summary["mean_keys"].shape[2] > 0
-    assert summary["peak_keys"].shape == summary["mean_keys"].shape
-    assert summary["topk_peak_keys"].shape[-2] >= 1
+    assert summary["topk_key_means"].shape == summary["mean_keys"].shape
 
 
-def test_block_wise_press_supports_multiple_head_scoring_methods():
-    keys, values = make_kv(seq_len=8)
-    layer0 = DummyModule(layer_idx=0)
-    hidden_states = make_hidden_states(8)
-
-    for method in ["max", "topk_mean", "percentile"]:
-        press = BlockWisePress(
-            compression_ratio=0.5,
-            block_size=2,
-            min_q_window=1,
-            max_q_window=4,
-            head_scoring_method=method,
-            head_topk_ratio=0.5,
-            head_percentile=0.5,
-        )
-        result_keys, result_values = press.compress(
-            layer0,
-            hidden_states,
-            keys,
-            values,
-            None,
-            {"cache_position": torch.tensor([8])},
-        )
-        assert result_keys.shape[2] == 4
-        assert result_values.shape[2] == 4
-
-
-def test_block_wise_press_head_redundancy_penalty_is_supported():
+def test_block_wise_press_uses_simple_block_summaries():
     keys, values = make_kv(seq_len=8)
     layer0 = DummyModule(layer_idx=0)
     press = BlockWisePress(
         compression_ratio=0.5,
         block_size=2,
-        min_q_window=1,
-        max_q_window=4,
-        head_redundancy_alpha=0.5,
+        q_window_size=4,
+        summary_topk_keys=2,
     )
 
     result_keys, result_values = press.compress(
@@ -288,31 +259,35 @@ def test_block_wise_press_head_redundancy_penalty_is_supported():
 
     assert result_keys.shape[2] == 4
     assert result_values.shape[2] == 4
+    summary = press.last_block_summary[layer0.layer_idx]
+    assert summary["mean_keys"].shape == summary["topk_key_means"].shape
 
 
-def test_block_wise_press_summary_topk_scales_with_block_size():
+def test_block_wise_press_supports_fixed_summary_topk_choices():
     keys, values = make_kv(seq_len=32)
     hidden_states = make_hidden_states(32)
     layer0 = DummyModule(layer_idx=0)
 
-    press16 = BlockWisePress(compression_ratio=0.5, block_size=16, min_q_window=1, max_q_window=8)
-    press16.compress(layer0, hidden_states, keys, values, None, {"cache_position": torch.tensor([32])})
-    assert press16.last_block_summary[layer0.layer_idx]["topk_peak_keys"].shape[-2] == 2
+    press16 = BlockWisePress(compression_ratio=0.5, block_size=16, q_window_size=8, summary_topk_keys=2)
+    result16_keys, _ = press16.compress(
+        layer0, hidden_states, keys, values, None, {"cache_position": torch.tensor([32])}
+    )
+    assert result16_keys.shape[2] > 0
 
     layer1 = DummyModule(layer_idx=1)
-    press32 = BlockWisePress(compression_ratio=0.5, block_size=32, min_q_window=1, max_q_window=8)
-    press32.compress(layer1, hidden_states, keys, values, None, {"cache_position": torch.tensor([32])})
-    assert press32.last_block_summary[layer1.layer_idx]["topk_peak_keys"].shape[-2] == 3
+    press32 = BlockWisePress(compression_ratio=0.5, block_size=32, q_window_size=8, summary_topk_keys=4)
+    result32_keys, _ = press32.compress(
+        layer1, hidden_states, keys, values, None, {"cache_position": torch.tensor([32])}
+    )
+    assert result32_keys.shape[2] > 0
 
 
 def test_block_wise_press_recent_blocks_expand_keep_budget():
     press = BlockWisePress(
         compression_ratio=0.5,
         block_size=2,
-        min_q_window=1,
-        max_q_window=4,
+        q_window_size=4,
         protected_recent_blocks=1,
-        protected_hot_blocks=0,
     )
     layer0 = DummyModule(layer_idx=0)
     keys, values = make_kv(seq_len=8)
@@ -336,10 +311,8 @@ def test_block_wise_press_extreme_compression_can_override_recent_blocks(caplog)
     press = BlockWisePress(
         compression_ratio=0.99,
         block_size=2,
-        min_q_window=1,
-        max_q_window=4,
+        q_window_size=4,
         protected_recent_blocks=3,
-        protected_hot_blocks=0,
     )
     layer0 = DummyModule(layer_idx=0)
     keys, values = make_kv(seq_len=8)

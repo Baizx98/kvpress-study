@@ -132,12 +132,8 @@ PRESS_REGISTRY = {
     "block_wise": BlockWisePress(),
     "block_wise_legacy": BlockWisePress(
         summary_topk_keys=1,
-        block_peak_weight=0.5,
-        multi_peak_weight=0.0,
+        mean_key_weight=0.5,
         protected_recent_blocks=0,
-        auto_recent_min_blocks=0,
-        auto_recent_max_blocks=0,
-        protected_hot_blocks=0,
     ),
     "dual_phase_per_layer": DualPhasePerLayerPress.init_class_vars(
         layer_phase_ratios={},
