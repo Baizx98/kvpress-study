@@ -40,7 +40,7 @@ def score_metrics(dataset: str, metrics) -> float:
 
 
 def parse_result_dirs(results_dir: Path):
-    records = []
+    records_by_key = {}
     for metrics_path in results_dir.rglob("metrics.json"):
         metrics = json.loads(metrics_path.read_text())
         config_path = metrics_path.parent / "config.yaml"
@@ -52,14 +52,22 @@ def parse_result_dirs(results_dir: Path):
         ratio = config.get("compression_ratio")
         if dataset is None or press is None or ratio is None:
             continue
-        records.append(
-            {
-                "dataset": dataset,
-                "press": press,
-                "ratio": float(ratio),
-                "score": score_metrics(dataset, metrics),
-            }
-        )
+        key = (dataset, press, float(ratio))
+        candidate = {
+            "dataset": dataset,
+            "press": press,
+            "ratio": float(ratio),
+            "score": score_metrics(dataset, metrics),
+            "_path_depth": len(metrics_path.relative_to(results_dir).parts),
+        }
+        current = records_by_key.get(key)
+        if current is None or candidate["_path_depth"] < current["_path_depth"]:
+            records_by_key[key] = candidate
+
+    records = []
+    for record in records_by_key.values():
+        record.pop("_path_depth", None)
+        records.append(record)
     return records
 
 

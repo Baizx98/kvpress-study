@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import pytest
 import torch
 from torch import nn
 
@@ -235,6 +236,7 @@ def test_block_wise_press_builds_block_summary_cache():
     summary = press.last_block_summary[layer0.layer_idx]
     assert summary["mean_keys"].shape[2] > 0
     assert summary["peak_keys"].shape == summary["mean_keys"].shape
+    assert summary["topk_peak_keys"].shape[-2] >= 1
 
 
 def test_block_wise_press_supports_multiple_head_scoring_methods():
@@ -286,6 +288,75 @@ def test_block_wise_press_head_redundancy_penalty_is_supported():
 
     assert result_keys.shape[2] == 4
     assert result_values.shape[2] == 4
+
+
+def test_block_wise_press_summary_topk_scales_with_block_size():
+    keys, values = make_kv(seq_len=32)
+    hidden_states = make_hidden_states(32)
+    layer0 = DummyModule(layer_idx=0)
+
+    press16 = BlockWisePress(compression_ratio=0.5, block_size=16, min_q_window=1, max_q_window=8)
+    press16.compress(layer0, hidden_states, keys, values, None, {"cache_position": torch.tensor([32])})
+    assert press16.last_block_summary[layer0.layer_idx]["topk_peak_keys"].shape[-2] == 2
+
+    layer1 = DummyModule(layer_idx=1)
+    press32 = BlockWisePress(compression_ratio=0.5, block_size=32, min_q_window=1, max_q_window=8)
+    press32.compress(layer1, hidden_states, keys, values, None, {"cache_position": torch.tensor([32])})
+    assert press32.last_block_summary[layer1.layer_idx]["topk_peak_keys"].shape[-2] == 3
+
+
+def test_block_wise_press_recent_blocks_expand_keep_budget():
+    press = BlockWisePress(
+        compression_ratio=0.5,
+        block_size=2,
+        min_q_window=1,
+        max_q_window=4,
+        protected_recent_blocks=1,
+        protected_hot_blocks=0,
+    )
+    layer0 = DummyModule(layer_idx=0)
+    keys, values = make_kv(seq_len=8)
+
+    compressed_keys, compressed_values = press.compress(
+        layer0,
+        make_hidden_states(8),
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+    )
+
+    assert compressed_keys.shape[2] == 4
+    assert compressed_values.shape[2] == 4
+    kept_tokens = compressed_keys[0, 0, :, 0].tolist()
+    assert 24.0 in kept_tokens and 28.0 in kept_tokens
+
+
+def test_block_wise_press_extreme_compression_can_override_recent_blocks(caplog):
+    press = BlockWisePress(
+        compression_ratio=0.99,
+        block_size=2,
+        min_q_window=1,
+        max_q_window=4,
+        protected_recent_blocks=3,
+        protected_hot_blocks=0,
+    )
+    layer0 = DummyModule(layer_idx=0)
+    keys, values = make_kv(seq_len=8)
+
+    with caplog.at_level("INFO"):
+        compressed_keys, compressed_values = press.compress(
+            layer0,
+            make_hidden_states(8),
+            keys,
+            values,
+            None,
+            {"cache_position": torch.tensor([8])},
+        )
+
+    assert compressed_keys.shape[2] == 2
+    assert compressed_values.shape[2] == 2
+    assert any("too aggressive" in record.message for record in caplog.records)
 
 
 def test_dual_phase_press_records_block_states():
