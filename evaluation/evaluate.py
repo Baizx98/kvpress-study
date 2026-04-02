@@ -84,6 +84,10 @@ class EvaluationConfig:
     key_channel_compression_ratio: Optional[float] = None
     threshold: Optional[float] = None
     block_size: Optional[int] = None
+    q_window_size: Optional[int] = None
+    summary_topk_keys: Optional[int] = None
+    protected_recent_blocks: Optional[int] = None
+    mean_key_weight: Optional[float] = None
 
     # Dataset and generation parameters
     fraction: float = 1.0
@@ -138,6 +142,20 @@ class EvaluationConfig:
             assert 0.0 <= self.key_channel_compression_ratio <= 1.0, (
                 f"key_channel_compression_ratio must be between 0.0 and 1.0, got {self.key_channel_compression_ratio}"
             )
+        if self.q_window_size is not None:
+            assert self.q_window_size > 0, f"q_window_size must be > 0, got {self.q_window_size}"
+        if self.summary_topk_keys is not None:
+            assert self.summary_topk_keys > 0, (
+                f"summary_topk_keys must be > 0, got {self.summary_topk_keys}"
+            )
+        if self.protected_recent_blocks is not None:
+            assert self.protected_recent_blocks >= 0, (
+                f"protected_recent_blocks must be >= 0, got {self.protected_recent_blocks}"
+            )
+        if self.mean_key_weight is not None:
+            assert 0.0 <= self.mean_key_weight <= 1.0, (
+                f"mean_key_weight must be between 0.0 and 1.0, got {self.mean_key_weight}"
+            )
 
         # Validate fraction
         assert 0.0 < self.fraction <= 1.0, (
@@ -189,6 +207,14 @@ class EvaluationConfig:
             components.append("query_aware")
         if self.key_channel_compression_ratio is not None:
             components.append(f"key_channel_cr{self.key_channel_compression_ratio:.2f}")
+        if self.q_window_size is not None:
+            components.append(f"qwindow{self.q_window_size}")
+        if self.summary_topk_keys is not None:
+            components.append(f"topk{self.summary_topk_keys}")
+        if self.protected_recent_blocks is not None:
+            components.append(f"recent{self.protected_recent_blocks}")
+        if self.mean_key_weight is not None:
+            components.append(f"meankeyw{self.mean_key_weight:.2f}")
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
 
@@ -381,6 +407,14 @@ class EvaluationRunner:
                 "block_size must be set for BlockWisePress"
             )
             press.block_size = block_size
+            if self.config.q_window_size is not None:
+                press.q_window_size = self.config.q_window_size
+            if self.config.summary_topk_keys is not None:
+                press.summary_topk_keys = self.config.summary_topk_keys
+            if self.config.protected_recent_blocks is not None:
+                press.protected_recent_blocks = self.config.protected_recent_blocks
+            if self.config.mean_key_weight is not None:
+                press.mean_key_weight = self.config.mean_key_weight
 
         else:
             if hasattr(press, "compression_ratio"):
