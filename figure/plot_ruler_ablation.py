@@ -22,7 +22,7 @@ ABLATION_PARAMS = {
 
 
 def load_records(results_dir: Path):
-    records = []
+    deduped_records = {}
     for config_path in results_dir.rglob("config.yaml"):
         metrics_path = config_path.parent / "metrics.json"
         if not metrics_path.exists():
@@ -38,9 +38,27 @@ def load_records(results_dir: Path):
             "protected_recent_blocks": int(config.get("protected_recent_blocks", 4)),
             "mean_key_weight": float(config.get("mean_key_weight", 0.5)),
             "metrics": {k: float(v["string_match"]) for k, v in metrics.items() if "string_match" in v},
+            "result_path": str(config_path.parent),
         }
-        records.append(record)
-    return records
+        key = (
+            record["ratio"],
+            record["q_window_size"],
+            record["summary_topk_keys"],
+            record["protected_recent_blocks"],
+            record["mean_key_weight"],
+        )
+        current = deduped_records.get(key)
+        if current is None:
+            deduped_records[key] = record
+            continue
+
+        # Prefer the shallower canonical result directory over retry subdirectories like /1 or /2.
+        current_depth = len(Path(current["result_path"]).parts)
+        new_depth = len(config_path.parent.parts)
+        if new_depth < current_depth:
+            deduped_records[key] = record
+
+    return list(deduped_records.values())
 
 
 def filter_records(records, ablation_name: str):
