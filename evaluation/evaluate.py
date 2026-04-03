@@ -40,6 +40,56 @@ from kvpress import (
 logger = logging.getLogger(__name__)
 
 
+def _build_dataset_load_kwargs(dataset_id: str, data_dir: str | None) -> dict[str, object]:
+    """
+    Build keyword arguments for `datasets.load_dataset`.
+
+    Some Hub datasets expose logical subsets as dataset configs (`name=`) rather than
+    file-system style `data_dir=` values. RULER is one such case: 4096/8192/16384 are
+    config names. Passing them as `data_dir` makes the cache key fragile and can trigger
+    repeated cache lookup failures like `default-data_dir=4096`.
+    """
+    kwargs: dict[str, object] = {}
+    if data_dir is None:
+        return kwargs
+
+    if dataset_id == "simonjegou/ruler":
+        kwargs["name"] = data_dir
+    else:
+        kwargs["data_dir"] = data_dir
+    return kwargs
+
+
+def _load_dataset_with_cache_fallback(dataset_id: str, data_dir: str | None, split: str):
+    """
+    Load a Hugging Face dataset, retrying with a cache rebuild when the local
+    cache metadata gets out of sync with the requested config/data_dir.
+    """
+    load_kwargs = _build_dataset_load_kwargs(dataset_id, data_dir)
+    try:
+        return load_dataset(dataset_id, split=split, **load_kwargs)
+    except ValueError as exc:
+        message = str(exc)
+        cache_mismatch = (
+            "Couldn't find cache" in message and "Available configs in the cache" in message
+        )
+        if not cache_mismatch:
+            raise
+
+        logger.warning(
+            "Dataset cache mismatch detected for dataset=%s data_dir=%s. "
+            "Retrying with force_redownload to rebuild the cache entry.",
+            dataset_id,
+            data_dir,
+        )
+        return load_dataset(
+            dataset_id,
+            split=split,
+            download_mode="force_redownload",
+            **load_kwargs,
+        )
+
+
 def _coerce_bool(value):
     if isinstance(value, bool):
         return value
@@ -449,7 +499,7 @@ class EvaluationRunner:
         logger.info(
             f"Loading dataset: {DATASET_REGISTRY[dataset_name]} (data_dir: {data_dir})"
         )
-        df = load_dataset(
+        df = _load_dataset_with_cache_fallback(
             DATASET_REGISTRY[dataset_name], data_dir=data_dir, split="test"
         ).to_pandas()
 
