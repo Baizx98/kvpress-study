@@ -4,6 +4,7 @@ import json
 import math
 import os
 import re
+import gc
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -264,8 +265,17 @@ def run_prefill_debug(pipe, context: str, press):
     )
     cache = DynamicCache()
     context_ids = input_tensors["context_ids"].to(pipe.model.device)
-    with press(pipe.model):
-        pipe.model.model(input_ids=context_ids, past_key_values=cache)
+    with torch.inference_mode():
+        with press(pipe.model):
+            outputs = pipe.model.model(input_ids=context_ids, past_key_values=cache)
+
+    del outputs
+    del cache
+    del context_ids
+    del input_tensors
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     return press
 
 
@@ -381,6 +391,20 @@ def main():
         bw_press = run_prefill_debug(pipe, full_context, bw_press)
         ck_press = run_prefill_debug(pipe, full_context, ck_press)
         fig_path = plot_case(case, bw_press, ck_press, answer_spans, question_start_token)
+        debug_path = RESULT_DIR / f"case_{case['sample_index']:04d}_{case['task']}.json"
+        with open(debug_path, "w") as f:
+            json.dump(
+                {
+                    "case": case,
+                    "answer_spans": answer_spans,
+                    "question_start_token": question_start_token,
+                    "blockwise": bw_press.layer_debug,
+                    "chunkkv": ck_press.layer_debug,
+                },
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
 
         analysis_summary.append(
             {
@@ -388,6 +412,7 @@ def main():
                 "answer_spans": answer_spans,
                 "question_start_token": question_start_token,
                 "figure_path": str(fig_path),
+                "debug_json_path": str(debug_path),
             }
         )
 
