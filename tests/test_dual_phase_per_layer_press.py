@@ -236,8 +236,6 @@ def test_block_wise_press_builds_block_summary_cache():
     summary = press.last_block_summary[layer0.layer_idx]
     assert summary["mean_keys"].shape[2] > 0
     assert summary["topk_key_means"].shape == summary["mean_keys"].shape
-    assert summary["token_correction_keys"].shape[:3] == summary["mean_keys"].shape[:3]
-    assert summary["token_correction_keys"].shape[3] == press.token_correction_tokens
 
 
 def test_block_wise_press_uses_simple_block_summaries():
@@ -262,7 +260,7 @@ def test_block_wise_press_uses_simple_block_summaries():
     assert result_keys.shape[2] == 4
 
 
-def test_block_wise_press_token_correction_handles_short_tail_blocks():
+def test_block_wise_press_handles_short_tail_blocks_with_simple_summaries():
     keys, values = make_kv(seq_len=9)
     layer0 = DummyModule(layer_idx=0)
     press = BlockWisePress(
@@ -270,7 +268,6 @@ def test_block_wise_press_token_correction_handles_short_tail_blocks():
         block_size=4,
         q_window_size=4,
         summary_topk_keys=4,
-        token_correction_tokens=2,
     )
 
     result_keys, result_values = press.compress(
@@ -284,8 +281,7 @@ def test_block_wise_press_token_correction_handles_short_tail_blocks():
 
     summary = press.last_block_summary[layer0.layer_idx]
     assert result_keys.shape[2] == result_values.shape[2]
-    assert summary["token_correction_keys"].shape[2] == 2
-    assert summary["token_correction_keys"].shape[3] == 2
+    assert summary["topk_key_means"].shape[2] == 2
     assert result_values.shape[2] == 5
 
 

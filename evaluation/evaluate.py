@@ -98,6 +98,20 @@ def _coerce_bool(value):
     return bool(value)
 
 
+def _normalize_task_filter(task_filter: Any) -> list[str]:
+    if task_filter is None:
+        return []
+    if isinstance(task_filter, str):
+        return [task.strip() for task in task_filter.split(",") if task.strip()]
+    if isinstance(task_filter, (list, tuple)):
+        normalized: list[str] = []
+        for item in task_filter:
+            normalized.extend(_normalize_task_filter(item))
+        return normalized
+    text = str(task_filter).strip()
+    return [text] if text else []
+
+
 def _press_requires_question_aware(press) -> bool:
     if press is None:
         return False
@@ -139,6 +153,8 @@ class EvaluationConfig:
     protected_recent_blocks: Optional[int] = None
     mean_key_weight: Optional[float] = None
     cross_layer_score_residual_weight: Optional[float] = None
+    task_filter: Optional[str] = None
+    samples_per_task: Optional[int] = None
 
     # Dataset and generation parameters
     fraction: float = 1.0
@@ -171,6 +187,9 @@ class EvaluationConfig:
     def __post_init__(self):
         """Validate configuration after initialization."""
         self.query_aware = _coerce_bool(self.query_aware)
+        if self.task_filter is not None:
+            normalized_tasks = _normalize_task_filter(self.task_filter)
+            self.task_filter = normalized_tasks if normalized_tasks else None
 
         # Validate dataset
         assert self.dataset in DATASET_REGISTRY, f"No dataset found for {self.dataset}"
@@ -211,6 +230,10 @@ class EvaluationConfig:
             assert 0.0 <= self.cross_layer_score_residual_weight <= 1.0, (
                 "cross_layer_score_residual_weight must be between 0.0 and 1.0, "
                 f"got {self.cross_layer_score_residual_weight}"
+            )
+        if self.samples_per_task is not None:
+            assert self.samples_per_task > 0, (
+                f"samples_per_task must be > 0, got {self.samples_per_task}"
             )
 
         # Validate fraction
@@ -273,6 +296,11 @@ class EvaluationConfig:
             components.append(f"meankeyw{self.mean_key_weight:.2f}")
         if self.cross_layer_score_residual_weight is not None:
             components.append(f"layerresw{self.cross_layer_score_residual_weight:.2f}")
+        if self.task_filter:
+            task_tag = "-".join(_normalize_task_filter(self.task_filter))
+            components.append(f"tasks{task_tag}")
+        if self.samples_per_task is not None:
+            components.append(f"spt{self.samples_per_task}")
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
 
@@ -514,6 +542,34 @@ class EvaluationRunner:
         df = _load_dataset_with_cache_fallback(
             DATASET_REGISTRY[dataset_name], data_dir=data_dir, split="test"
         ).to_pandas()
+
+        if self.config.task_filter:
+            task_names = _normalize_task_filter(self.config.task_filter)
+            if "task" not in df.columns:
+                raise ValueError(
+                    f"task_filter was provided ({task_names}), but dataset '{dataset_name}' has no 'task' column."
+                )
+            original_len = len(df)
+            df = df[df["task"].isin(task_names)].copy()
+            logger.info(
+                f"Filtered dataset to tasks {task_names}: kept {len(df)} / {original_len} samples."
+            )
+
+        if self.config.samples_per_task is not None:
+            if "task" not in df.columns:
+                raise ValueError(
+                    "samples_per_task was provided, but dataset has no 'task' column."
+                )
+            samples_per_task = self.config.samples_per_task
+            grouped = []
+            for task_name, task_df in df.groupby("task", sort=True):
+                sample_n = min(samples_per_task, len(task_df))
+                grouped.append(task_df.sample(n=sample_n, random_state=self.config.seed))
+            df = pd.concat(grouped, axis=0).reset_index(drop=True) if grouped else df.iloc[:0].copy()
+            logger.info(
+                f"Applied per-task sampling with samples_per_task={samples_per_task}. "
+                f"Final dataset size: {len(df)}."
+            )
 
         if fraction < 1.0:
             original_len = len(df)

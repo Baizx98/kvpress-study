@@ -18,6 +18,7 @@
 - `experiments/ruler_failure_block_analysis`
 - `experiments/ruler_token_correction_50pct`
 - `experiments/ruler_cross_layer_residual_50pct`
+- `experiments/ruler_residual_ablation_fast`
 
 每个实验子目录包含：
 
