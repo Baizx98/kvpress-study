@@ -35,6 +35,8 @@ class BlockWisePress(BasePress):
     q_window_size: int = 32
     summary_topk_keys: int = 4
     mean_key_weight: float = 0.75
+    token_correction_tokens: int = 2
+    token_correction_weight: float = 0.2
     protected_recent_blocks: int = 2
     eps: float = 1e-6
     require_question_aware: bool = True
@@ -48,7 +50,9 @@ class BlockWisePress(BasePress):
         assert self.block_size > 0, "block_size must be > 0"
         assert self.q_window_size > 0, "q_window_size must be > 0"
         assert self.summary_topk_keys > 0, "summary_topk_keys must be > 0"
+        assert self.token_correction_tokens > 0, "token_correction_tokens must be > 0"
         assert 0 <= self.mean_key_weight <= 1, "mean_key_weight must be in [0, 1]"
+        assert 0 <= self.token_correction_weight <= 1, "token_correction_weight must be in [0, 1]"
         assert self.protected_recent_blocks >= 0, "protected_recent_blocks must be >= 0"
 
     def _resolve_layer_idx(self, module: nn.Module) -> int:
@@ -63,13 +67,18 @@ class BlockWisePress(BasePress):
     def _resolve_summary_topk(self) -> int:
         return min(self.summary_topk_keys, self.block_size)
 
+    def _resolve_token_correction_topk(self) -> int:
+        return min(self.token_correction_tokens, self.block_size)
+
     def _summarize_blocks(self, keys: torch.Tensor, values: torch.Tensor) -> dict[str, torch.Tensor]:
         bsz, num_key_value_heads, key_len, head_dim = keys.shape
         num_blocks = math.ceil(key_len / self.block_size)
         topk = self._resolve_summary_topk()
+        correction_topk = self._resolve_token_correction_topk()
 
         mean_keys = []
         topk_key_means = []
+        token_correction_keys = []
         mean_values = []
         token_counts = []
 
@@ -80,6 +89,7 @@ class BlockWisePress(BasePress):
             block_values = values[:, :, start:end]
             block_len = end - start
             actual_topk = min(topk, block_len)
+            actual_correction_topk = min(correction_topk, block_len)
 
             mean_keys.append(block_keys.mean(dim=2))
             mean_values.append(block_values.mean(dim=2))
@@ -90,6 +100,15 @@ class BlockWisePress(BasePress):
             topk_keys = block_keys.gather(2, gather_index)
             topk_key_means.append(topk_keys.mean(dim=2))
 
+            correction_token_indices = token_norms.topk(actual_correction_topk, dim=-1).indices
+            correction_gather_index = correction_token_indices[..., None].expand(-1, -1, -1, head_dim)
+            correction_keys = block_keys.gather(2, correction_gather_index)
+            if actual_correction_topk < correction_topk:
+                pad_count = correction_topk - actual_correction_topk
+                pad_key = correction_keys[:, :, -1:, :].expand(-1, -1, pad_count, -1)
+                correction_keys = torch.cat([correction_keys, pad_key], dim=2)
+            token_correction_keys.append(correction_keys)
+
             token_counts.append(
                 torch.full((bsz,), block_len, dtype=torch.long, device=keys.device)
             )
@@ -98,6 +117,9 @@ class BlockWisePress(BasePress):
             return {
                 "mean_keys": keys.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
                 "topk_key_means": keys.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
+                "token_correction_keys": keys.new_zeros(
+                    (bsz, num_key_value_heads, 0, correction_topk, head_dim)
+                ),
                 "mean_values": values.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
                 "token_counts": torch.zeros((bsz, 0), dtype=torch.long, device=keys.device),
             }
@@ -105,6 +127,7 @@ class BlockWisePress(BasePress):
         return {
             "mean_keys": torch.stack(mean_keys, dim=2),
             "topk_key_means": torch.stack(topk_key_means, dim=2),
+            "token_correction_keys": torch.stack(token_correction_keys, dim=2),
             "mean_values": torch.stack(mean_values, dim=2),
             "token_counts": torch.stack(token_counts, dim=1),
         }
@@ -163,9 +186,19 @@ class BlockWisePress(BasePress):
 
         mean_key_states = repeat_kv(summary["mean_keys"], num_key_value_groups)
         topk_key_states = repeat_kv(summary["topk_key_means"], num_key_value_groups)
+        correction_tokens = summary["token_correction_keys"].shape[3]
+        correction_key_states = repeat_kv(
+            summary["token_correction_keys"].reshape(
+                bsz, num_key_value_heads, num_blocks * correction_tokens, head_dim
+            ),
+            num_key_value_groups,
+        )
 
         mean_scores = torch.matmul(query_states, mean_key_states.transpose(-1, -2)) / math.sqrt(head_dim)
         topk_scores = torch.matmul(query_states, topk_key_states.transpose(-1, -2)) / math.sqrt(head_dim)
+        correction_scores = (
+            torch.matmul(query_states, correction_key_states.transpose(-1, -2)) / math.sqrt(head_dim)
+        )
 
         mean_scores = mean_scores.view(
             bsz, num_key_value_heads, num_key_value_groups, q_window, num_blocks
@@ -173,12 +206,25 @@ class BlockWisePress(BasePress):
         topk_scores = topk_scores.view(
             bsz, num_key_value_heads, num_key_value_groups, q_window, num_blocks
         ).mean(dim=2)
+        correction_scores = correction_scores.view(
+            bsz,
+            num_key_value_heads,
+            num_key_value_groups,
+            q_window,
+            num_blocks,
+            correction_tokens,
+        ).mean(dim=2)
 
         block_mean_scores = mean_scores.mean(dim=-2)
         block_topk_scores = topk_scores.mean(dim=-2)
-        block_scores_per_head = (
+        summary_scores_per_head = (
             self.mean_key_weight * block_mean_scores
             + (1.0 - self.mean_key_weight) * block_topk_scores
+        )
+        correction_scores_per_head = correction_scores.max(dim=-1).values.mean(dim=-2)
+        block_scores_per_head = (
+            (1.0 - self.token_correction_weight) * summary_scores_per_head
+            + self.token_correction_weight * correction_scores_per_head
         )
         block_scores = block_scores_per_head.mean(dim=1)
 
@@ -194,6 +240,8 @@ class BlockWisePress(BasePress):
         return {
             "q_window": q_window,
             "block_summary": summary,
+            "summary_scores_per_head": summary_scores_per_head,
+            "correction_scores_per_head": correction_scores_per_head,
             "block_scores_per_head": block_scores_per_head,
             "block_scores": block_scores,
         }

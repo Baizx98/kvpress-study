@@ -16,6 +16,7 @@
 - `experiments/prefill_compare_50pct_blockwise_chunkkv`
 - `experiments/ruler_ablation_10pct`
 - `experiments/ruler_failure_block_analysis`
+- `experiments/ruler_token_correction_50pct`
 
 每个实验子目录包含：
 
