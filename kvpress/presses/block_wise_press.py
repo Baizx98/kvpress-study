@@ -32,10 +32,10 @@ class BlockWisePress(BasePress):
 
     compression_ratio: float = 0.0
     block_size: int = 16
-    q_window_size: int = 64
-    summary_topk_keys: int = 2
-    mean_key_weight: float = 0.5
-    protected_recent_blocks: int = 4
+    q_window_size: int = 32
+    summary_topk_keys: int = 4
+    mean_key_weight: float = 0.75
+    protected_recent_blocks: int = 2
     eps: float = 1e-6
     require_question_aware: bool = True
 
