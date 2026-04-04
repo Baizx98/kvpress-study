@@ -287,6 +287,100 @@ def test_block_wise_press_token_correction_handles_short_tail_blocks():
     assert summary["token_correction_keys"].shape[2] == 2
     assert summary["token_correction_keys"].shape[3] == 2
     assert result_values.shape[2] == 5
+
+
+def test_block_wise_press_cross_layer_score_residual_smooths_next_layer():
+    keys, values = make_kv(seq_len=8)
+    hidden_states = make_hidden_states(8)
+    layer0 = DummyModule(layer_idx=0)
+    layer1 = DummyModule(layer_idx=1)
+    with torch.no_grad():
+        layer1.q_proj.weight.zero_()
+
+    press = BlockWisePress(
+        compression_ratio=0.5,
+        block_size=2,
+        q_window_size=4,
+        cross_layer_score_residual_weight=0.25,
+    )
+
+    analysis0 = press.analyze_blocks(
+        layer0,
+        hidden_states,
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+        force_refresh_summary=True,
+    )
+    analysis1 = press.analyze_blocks(
+        layer1,
+        hidden_states,
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+        force_refresh_summary=True,
+    )
+
+    assert torch.allclose(analysis1["raw_block_scores"], torch.zeros_like(analysis1["raw_block_scores"]))
+    assert analysis1["previous_layer_block_scores"] is not None
+    assert torch.allclose(
+        analysis1["block_scores"],
+        0.25 * analysis0["block_scores"],
+        atol=1e-5,
+    )
+
+
+def test_block_wise_press_cross_layer_cache_resets_on_new_forward_signature():
+    keys, values = make_kv(seq_len=8)
+    hidden_states = make_hidden_states(8)
+    layer0 = DummyModule(layer_idx=0)
+    layer1 = DummyModule(layer_idx=1)
+    with torch.no_grad():
+        layer1.q_proj.weight.zero_()
+
+    press = BlockWisePress(
+        compression_ratio=0.5,
+        block_size=2,
+        q_window_size=4,
+        cross_layer_score_residual_weight=0.25,
+    )
+
+    press.analyze_blocks(
+        layer0,
+        hidden_states,
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+        force_refresh_summary=True,
+    )
+    press.analyze_blocks(
+        layer1,
+        hidden_states,
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+        force_refresh_summary=True,
+    )
+    new_step_analysis = press.analyze_blocks(
+        layer1,
+        hidden_states,
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([9])},
+        force_refresh_summary=True,
+    )
+
+    assert new_step_analysis["previous_layer_block_scores"] is None
+    assert torch.allclose(
+        new_step_analysis["block_scores"],
+        torch.zeros_like(new_step_analysis["block_scores"]),
+        atol=1e-5,
+    )
     summary = press.last_block_summary[layer0.layer_idx]
     assert summary["mean_keys"].shape == summary["topk_key_means"].shape
 

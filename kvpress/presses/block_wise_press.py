@@ -36,7 +36,8 @@ class BlockWisePress(BasePress):
     summary_topk_keys: int = 4
     mean_key_weight: float = 0.75
     token_correction_tokens: int = 2
-    token_correction_weight: float = 0.2
+    token_correction_weight: float = 0.0
+    cross_layer_score_residual_weight: float = 0.2
     protected_recent_blocks: int = 2
     eps: float = 1e-6
     require_question_aware: bool = True
@@ -44,6 +45,8 @@ class BlockWisePress(BasePress):
     last_block_heat: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
     last_block_heat_ema: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
     last_block_summary: dict[int, dict[str, torch.Tensor]] = field(default_factory=dict, init=False, repr=False)
+    _last_forward_signature: tuple[Any, ...] | None = field(default=None, init=False, repr=False)
+    _layer_score_cache: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
 
     def __post_init__(self):
         assert 0 <= self.compression_ratio < 1, "compression_ratio must be in [0, 1)"
@@ -53,6 +56,9 @@ class BlockWisePress(BasePress):
         assert self.token_correction_tokens > 0, "token_correction_tokens must be > 0"
         assert 0 <= self.mean_key_weight <= 1, "mean_key_weight must be in [0, 1]"
         assert 0 <= self.token_correction_weight <= 1, "token_correction_weight must be in [0, 1]"
+        assert 0 <= self.cross_layer_score_residual_weight <= 1, (
+            "cross_layer_score_residual_weight must be in [0, 1]"
+        )
         assert self.protected_recent_blocks >= 0, "protected_recent_blocks must be >= 0"
 
     def _resolve_layer_idx(self, module: nn.Module) -> int:
@@ -69,6 +75,41 @@ class BlockWisePress(BasePress):
 
     def _resolve_token_correction_topk(self) -> int:
         return min(self.token_correction_tokens, self.block_size)
+
+    def _resolve_forward_signature(
+        self,
+        hidden_states: torch.Tensor,
+        keys: torch.Tensor,
+        kwargs: dict,
+    ) -> tuple[Any, ...]:
+        cache_position = kwargs.get("cache_position")
+        if isinstance(cache_position, torch.Tensor):
+            cache_position_signature: tuple[int, ...] = tuple(int(v) for v in cache_position.view(-1).tolist())
+        elif cache_position is None:
+            cache_position_signature = ()
+        elif isinstance(cache_position, (list, tuple)):
+            cache_position_signature = tuple(int(v) for v in cache_position)
+        else:
+            cache_position_signature = (int(cache_position),)
+
+        return (
+            cache_position_signature,
+            int(hidden_states.shape[0]),
+            int(hidden_states.shape[1]),
+            int(keys.shape[2]),
+            int(math.ceil(keys.shape[2] / self.block_size)),
+        )
+
+    def _maybe_reset_cross_layer_cache(
+        self,
+        hidden_states: torch.Tensor,
+        keys: torch.Tensor,
+        kwargs: dict,
+    ) -> None:
+        signature = self._resolve_forward_signature(hidden_states, keys, kwargs)
+        if self._last_forward_signature != signature:
+            self._layer_score_cache.clear()
+            self._last_forward_signature = signature
 
     def _summarize_blocks(self, keys: torch.Tensor, values: torch.Tensor) -> dict[str, torch.Tensor]:
         bsz, num_key_value_heads, key_len, head_dim = keys.shape
@@ -164,9 +205,10 @@ class BlockWisePress(BasePress):
         kwargs: dict,
         force_refresh_summary: bool = False,
     ) -> dict[str, Any]:
-        del attentions, kwargs
+        del attentions
 
         bsz, num_key_value_heads, key_len, head_dim = keys.shape
+        self._maybe_reset_cross_layer_cache(hidden_states, keys, kwargs)
         summary = self.build_or_refresh_block_summary(
             module, keys, values, force_refresh=force_refresh_summary
         )
@@ -222,13 +264,29 @@ class BlockWisePress(BasePress):
             + (1.0 - self.mean_key_weight) * block_topk_scores
         )
         correction_scores_per_head = correction_scores.max(dim=-1).values.mean(dim=-2)
-        block_scores_per_head = (
+        raw_block_scores_per_head = (
             (1.0 - self.token_correction_weight) * summary_scores_per_head
             + self.token_correction_weight * correction_scores_per_head
         )
-        block_scores = block_scores_per_head.mean(dim=1)
+        raw_block_scores = raw_block_scores_per_head.mean(dim=1)
 
         layer_idx = self._resolve_layer_idx(module)
+        previous_layer_scores = self._layer_score_cache.get(layer_idx - 1)
+        if (
+            self.cross_layer_score_residual_weight > 0
+            and previous_layer_scores is not None
+            and previous_layer_scores.shape == raw_block_scores.shape
+        ):
+            block_scores = (
+                (1.0 - self.cross_layer_score_residual_weight) * raw_block_scores
+                + self.cross_layer_score_residual_weight * previous_layer_scores
+            )
+        else:
+            block_scores = raw_block_scores
+
+        block_scores_per_head = block_scores[:, None, :].expand(-1, num_key_value_heads, -1)
+        self._layer_score_cache[layer_idx] = block_scores.detach()
+
         detached_scores = block_scores.detach()
         self.last_block_heat[layer_idx] = detached_scores
         previous_ema = self.last_block_heat_ema.get(layer_idx)
@@ -242,6 +300,8 @@ class BlockWisePress(BasePress):
             "block_summary": summary,
             "summary_scores_per_head": summary_scores_per_head,
             "correction_scores_per_head": correction_scores_per_head,
+            "raw_block_scores": raw_block_scores,
+            "previous_layer_block_scores": previous_layer_scores,
             "block_scores_per_head": block_scores_per_head,
             "block_scores": block_scores,
         }

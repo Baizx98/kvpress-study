@@ -138,6 +138,7 @@ class EvaluationConfig:
     summary_topk_keys: Optional[int] = None
     protected_recent_blocks: Optional[int] = None
     mean_key_weight: Optional[float] = None
+    cross_layer_score_residual_weight: Optional[float] = None
 
     # Dataset and generation parameters
     fraction: float = 1.0
@@ -206,6 +207,11 @@ class EvaluationConfig:
             assert 0.0 <= self.mean_key_weight <= 1.0, (
                 f"mean_key_weight must be between 0.0 and 1.0, got {self.mean_key_weight}"
             )
+        if self.cross_layer_score_residual_weight is not None:
+            assert 0.0 <= self.cross_layer_score_residual_weight <= 1.0, (
+                "cross_layer_score_residual_weight must be between 0.0 and 1.0, "
+                f"got {self.cross_layer_score_residual_weight}"
+            )
 
         # Validate fraction
         assert 0.0 < self.fraction <= 1.0, (
@@ -265,6 +271,8 @@ class EvaluationConfig:
             components.append(f"recent{self.protected_recent_blocks}")
         if self.mean_key_weight is not None:
             components.append(f"meankeyw{self.mean_key_weight:.2f}")
+        if self.cross_layer_score_residual_weight is not None:
+            components.append(f"layerresw{self.cross_layer_score_residual_weight:.2f}")
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
 
@@ -465,6 +473,10 @@ class EvaluationRunner:
                 press.protected_recent_blocks = self.config.protected_recent_blocks
             if self.config.mean_key_weight is not None:
                 press.mean_key_weight = self.config.mean_key_weight
+            if self.config.cross_layer_score_residual_weight is not None:
+                press.cross_layer_score_residual_weight = (
+                    self.config.cross_layer_score_residual_weight
+                )
 
         else:
             if hasattr(press, "compression_ratio"):
