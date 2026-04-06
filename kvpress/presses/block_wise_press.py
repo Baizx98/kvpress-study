@@ -35,7 +35,7 @@ class BlockWisePress(BasePress):
     q_window_size: int = 32
     summary_topk_keys: int = 4
     mean_key_weight: float = 0.75
-    cross_layer_score_residual_weight: float = 0.2
+    prefix_sink_blocks: int = 1
     protected_recent_blocks: int = 2
     eps: float = 1e-6
     require_question_aware: bool = True
@@ -43,8 +43,6 @@ class BlockWisePress(BasePress):
     last_block_heat: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
     last_block_heat_ema: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
     last_block_summary: dict[int, dict[str, torch.Tensor]] = field(default_factory=dict, init=False, repr=False)
-    _last_forward_signature: tuple[Any, ...] | None = field(default=None, init=False, repr=False)
-    _layer_score_cache: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
 
     def __post_init__(self):
         assert 0 <= self.compression_ratio < 1, "compression_ratio must be in [0, 1)"
@@ -52,9 +50,7 @@ class BlockWisePress(BasePress):
         assert self.q_window_size > 0, "q_window_size must be > 0"
         assert self.summary_topk_keys > 0, "summary_topk_keys must be > 0"
         assert 0 <= self.mean_key_weight <= 1, "mean_key_weight must be in [0, 1]"
-        assert 0 <= self.cross_layer_score_residual_weight <= 1, (
-            "cross_layer_score_residual_weight must be in [0, 1]"
-        )
+        assert self.prefix_sink_blocks >= 0, "prefix_sink_blocks must be >= 0"
         assert self.protected_recent_blocks >= 0, "protected_recent_blocks must be >= 0"
 
     def _resolve_layer_idx(self, module: nn.Module) -> int:
@@ -69,40 +65,21 @@ class BlockWisePress(BasePress):
     def _resolve_summary_topk(self) -> int:
         return min(self.summary_topk_keys, self.block_size)
 
-    def _resolve_forward_signature(
+    def blend_score_reuse_hint(
         self,
-        hidden_states: torch.Tensor,
-        keys: torch.Tensor,
-        kwargs: dict,
-    ) -> tuple[Any, ...]:
-        cache_position = kwargs.get("cache_position")
-        if isinstance(cache_position, torch.Tensor):
-            cache_position_signature: tuple[int, ...] = tuple(int(v) for v in cache_position.view(-1).tolist())
-        elif cache_position is None:
-            cache_position_signature = ()
-        elif isinstance(cache_position, (list, tuple)):
-            cache_position_signature = tuple(int(v) for v in cache_position)
-        else:
-            cache_position_signature = (int(cache_position),)
-
-        return (
-            cache_position_signature,
-            int(hidden_states.shape[0]),
-            int(hidden_states.shape[1]),
-            int(keys.shape[2]),
-            int(math.ceil(keys.shape[2] / self.block_size)),
+        block_scores: torch.Tensor,
+        score_reuse_hint: torch.Tensor | None = None,
+        score_reuse_weight: float = 0.0,
+    ) -> tuple[torch.Tensor, bool]:
+        if score_reuse_hint is None or score_reuse_weight <= 0:
+            return block_scores, False
+        if score_reuse_hint.shape != block_scores.shape:
+            return block_scores, False
+        blended = (
+            (1.0 - score_reuse_weight) * block_scores
+            + score_reuse_weight * score_reuse_hint
         )
-
-    def _maybe_reset_cross_layer_cache(
-        self,
-        hidden_states: torch.Tensor,
-        keys: torch.Tensor,
-        kwargs: dict,
-    ) -> None:
-        signature = self._resolve_forward_signature(hidden_states, keys, kwargs)
-        if self._last_forward_signature != signature:
-            self._layer_score_cache.clear()
-            self._last_forward_signature = signature
+        return blended, True
 
     def _summarize_blocks(self, keys: torch.Tensor, values: torch.Tensor) -> dict[str, torch.Tensor]:
         bsz, num_key_value_heads, key_len, head_dim = keys.shape
@@ -185,7 +162,6 @@ class BlockWisePress(BasePress):
         del attentions
 
         bsz, num_key_value_heads, key_len, head_dim = keys.shape
-        self._maybe_reset_cross_layer_cache(hidden_states, keys, kwargs)
         summary = self.build_or_refresh_block_summary(
             module, keys, values, force_refresh=force_refresh_summary
         )
@@ -222,26 +198,10 @@ class BlockWisePress(BasePress):
             self.mean_key_weight * block_mean_scores
             + (1.0 - self.mean_key_weight) * block_topk_scores
         )
-        raw_block_scores_per_head = summary_scores_per_head
-        raw_block_scores = raw_block_scores_per_head.mean(dim=1)
+        block_scores_per_head = summary_scores_per_head
+        block_scores = block_scores_per_head.mean(dim=1)
 
         layer_idx = self._resolve_layer_idx(module)
-        previous_layer_scores = self._layer_score_cache.get(layer_idx - 1)
-        if (
-            self.cross_layer_score_residual_weight > 0
-            and previous_layer_scores is not None
-            and previous_layer_scores.shape == raw_block_scores.shape
-        ):
-            block_scores = (
-                (1.0 - self.cross_layer_score_residual_weight) * raw_block_scores
-                + self.cross_layer_score_residual_weight * previous_layer_scores
-            )
-        else:
-            block_scores = raw_block_scores
-
-        block_scores_per_head = block_scores[:, None, :].expand(-1, num_key_value_heads, -1)
-        self._layer_score_cache[layer_idx] = block_scores.detach()
-
         detached_scores = block_scores.detach()
         self.last_block_heat[layer_idx] = detached_scores
         previous_ema = self.last_block_heat_ema.get(layer_idx)
@@ -254,8 +214,6 @@ class BlockWisePress(BasePress):
             "q_window": q_window,
             "block_summary": summary,
             "summary_scores_per_head": summary_scores_per_head,
-            "raw_block_scores": raw_block_scores,
-            "previous_layer_block_scores": previous_layer_scores,
             "block_scores_per_head": block_scores_per_head,
             "block_scores": block_scores,
         }
@@ -285,6 +243,8 @@ class BlockWisePress(BasePress):
         kwargs: dict,
         compression_ratio: float | None = None,
         force_refresh_summary: bool = False,
+        score_reuse_hint: torch.Tensor | None = None,
+        score_reuse_weight: float = 0.0,
     ) -> dict[str, Any]:
         analysis = self.analyze_blocks(
             module,
@@ -294,6 +254,18 @@ class BlockWisePress(BasePress):
             attentions,
             kwargs,
             force_refresh_summary=force_refresh_summary,
+        )
+        blended_block_scores, reuse_applied = self.blend_score_reuse_hint(
+            analysis["block_scores"],
+            score_reuse_hint=score_reuse_hint,
+            score_reuse_weight=score_reuse_weight,
+        )
+        analysis["raw_block_scores"] = analysis["block_scores"]
+        analysis["reused_block_scores"] = score_reuse_hint
+        analysis["score_reuse_applied"] = reuse_applied
+        analysis["block_scores"] = blended_block_scores
+        analysis["block_scores_per_head"] = blended_block_scores[:, None, :].expand(
+            -1, keys.shape[1], -1
         )
         key_len = keys.shape[2]
         num_blocks = analysis["block_scores"].shape[-1]
@@ -308,10 +280,12 @@ class BlockWisePress(BasePress):
         elif keep_budget >= num_blocks:
             kept_block_indices = torch.arange(num_blocks, device=keys.device).expand(keys.shape[0], -1)
         else:
+            sink_count = min(self.prefix_sink_blocks, num_blocks)
             recent_count = min(self.protected_recent_blocks, num_blocks)
+            protected_sink_indices = set(range(sink_count))
             protected_recent_indices = set(range(max(0, num_blocks - recent_count), num_blocks))
             protected_tail_indices = {tail_block_idx} if has_partial_tail_block and num_blocks > 0 else set()
-            protected_indices = protected_recent_indices | protected_tail_indices
+            protected_indices = protected_sink_indices | protected_recent_indices | protected_tail_indices
 
             if len(protected_indices) <= keep_budget:
                 remaining_candidates = [idx for idx in range(num_blocks) if idx not in protected_indices]
@@ -327,7 +301,7 @@ class BlockWisePress(BasePress):
                 )
             else:
                 logger.info(
-                    "Requested compression is too aggressive: protected recent blocks exceed keep budget. "
+                    "Requested compression is too aggressive: sink/recent protected blocks exceed keep budget. "
                     "Falling back to score-based selection over all blocks."
                 )
                 kept_block_indices = self._select_top_block_indices(

@@ -44,6 +44,8 @@ class DualPhasePerLayerPress(BasePress):
     compression_interval: int = 1
     score_refresh_interval: int = 4
     decode_hidden_states_buffer_size: int = 32
+    score_reuse_mode: Literal["none", "step", "layer"] = "none"
+    score_reuse_weight: float = 0.2
     history_momentum: float = 0.8
     resident_gpu_ratio: float = 0.5
     prefetch_ratio: float = 0.5
@@ -65,6 +67,10 @@ class DualPhasePerLayerPress(BasePress):
         assert len(self.default_phase_ratios) == 2, "default_phase_ratios must be [prefill_ratio, decode_ratio]"
         assert len(self.default_phase_cold_ratios) == 2, "default_phase_cold_ratios must be [prefill_cold, decode_cold]"
         assert self.decode_hidden_states_buffer_size > 0, "decode_hidden_states_buffer_size must be > 0"
+        assert self.score_reuse_mode in {"none", "step", "layer"}, (
+            "score_reuse_mode must be one of {'none', 'step', 'layer'}"
+        )
+        assert 0 <= self.score_reuse_weight <= 1, "score_reuse_weight must be in [0, 1]"
         assert 0 <= self.history_momentum < 1, "history_momentum must be in [0, 1)"
         assert 0 <= self.resident_gpu_ratio <= 1, "resident_gpu_ratio must be in [0, 1]"
         assert 0 <= self.prefetch_ratio <= 1, "prefetch_ratio must be in [0, 1]"
@@ -78,6 +84,7 @@ class DualPhasePerLayerPress(BasePress):
         self.layer_block_states = defaultdict(dict)
         self.layer_cached_masks = defaultdict(lambda: None)
         self.layer_heat_ema = defaultdict(lambda: None)
+        self.layer_score_reuse_cache = defaultdict(lambda: None)
 
     @classmethod
     def init_class_vars(
@@ -150,11 +157,14 @@ class DualPhasePerLayerPress(BasePress):
             active_press.compression_ratio = ratio
             try:
                 keys, values = active_press.compress(module, hidden_states, keys, values, attentions, kwargs)
-                self._record_block_states(layer_idx, 0, active_press.last_block_heat.get(layer_idx), torch.empty(1, 0, dtype=torch.long, device=keys.device), torch.empty(1, 0, dtype=torch.long, device=keys.device))
+                latest_heat = active_press.last_block_heat.get(layer_idx)
+                self._update_score_reuse_cache(layer_idx, latest_heat)
+                self._record_block_states(layer_idx, 0, latest_heat, torch.empty(1, 0, dtype=torch.long, device=keys.device), torch.empty(1, 0, dtype=torch.long, device=keys.device))
                 return keys, values
             finally:
                 active_press.compression_ratio = original_ratio
 
+        score_reuse_hint = self._resolve_score_reuse_hint(layer_idx, phase)
         plan = active_press.build_block_plan(
             module,
             hidden_states,
@@ -164,11 +174,17 @@ class DualPhasePerLayerPress(BasePress):
             kwargs,
             compression_ratio=ratio,
             force_refresh_summary=force_refresh_summary,
+            score_reuse_hint=score_reuse_hint,
+            score_reuse_weight=self.score_reuse_weight,
         )
         original_num_blocks = plan["num_blocks"]
         deleted_block_indices = self._complement_block_indices(original_num_blocks, plan["kept_block_indices"], keys.device)
         keys, values = active_press.gather_by_token_indices(keys, values, plan["token_indices"])
 
+        retained_score_reuse_hint = self._resize_score_reuse_hint(
+            score_reuse_hint,
+            target_blocks=math.ceil(keys.shape[2] / active_press.block_size),
+        )
         retained_plan = active_press.build_block_plan(
             module,
             hidden_states,
@@ -178,6 +194,8 @@ class DualPhasePerLayerPress(BasePress):
             kwargs,
             compression_ratio=cold_ratio,
             force_refresh_summary=force_refresh_summary,
+            score_reuse_hint=retained_score_reuse_hint,
+            score_reuse_weight=self.score_reuse_weight,
         )
 
         active_block_indices = retained_plan["kept_block_indices"]
@@ -186,6 +204,7 @@ class DualPhasePerLayerPress(BasePress):
         module.masked_key_indices = cached_mask
 
         heat = retained_plan["block_scores"]
+        self._update_score_reuse_cache(layer_idx, heat)
         self._record_block_states(layer_idx, retained_plan["num_blocks"], heat, active_block_indices, deleted_block_indices)
         active_press.build_or_refresh_block_summary(module, keys, values, force_refresh=True)
         return keys, values
@@ -254,6 +273,8 @@ class DualPhasePerLayerPress(BasePress):
                 kwargs,
                 compression_ratio=self._resolve_cold_ratio(layer_idx, "decode"),
                 force_refresh_summary=new_block_formed,
+                score_reuse_hint=self._resolve_score_reuse_hint(layer_idx, "decode"),
+                score_reuse_weight=self.score_reuse_weight,
             )
             active_block_indices = retained_plan["kept_block_indices"]
             self.layer_cached_masks[layer_idx] = self._build_mask_from_active_blocks(
@@ -269,6 +290,7 @@ class DualPhasePerLayerPress(BasePress):
                 active_block_indices,
                 torch.empty(keys.shape[0], 0, dtype=torch.long, device=keys.device),
             )
+            self._update_score_reuse_cache(layer_idx, retained_plan["block_scores"])
 
         return output
 
@@ -280,6 +302,44 @@ class DualPhasePerLayerPress(BasePress):
         self.layer_block_states = defaultdict(dict)
         self.layer_cached_masks = defaultdict(lambda: None)
         self.layer_heat_ema = defaultdict(lambda: None)
+        self.layer_score_reuse_cache = defaultdict(lambda: None)
+
+    def _resolve_score_reuse_hint(
+        self,
+        layer_idx: int,
+        phase: PhaseName,
+    ) -> torch.Tensor | None:
+        if self.score_reuse_mode == "none":
+            return None
+        if self.score_reuse_mode == "layer":
+            if phase == "prefill":
+                return None
+            previous = self.layer_heat_ema.get(layer_idx - 1)
+            return previous.detach() if previous is not None else None
+        cached = self.layer_score_reuse_cache.get(layer_idx)
+        return cached.detach() if cached is not None else None
+
+    def _update_score_reuse_cache(
+        self,
+        layer_idx: int,
+        block_scores: torch.Tensor | None,
+    ) -> None:
+        if self.score_reuse_mode == "none" or block_scores is None:
+            return
+        self.layer_score_reuse_cache[layer_idx] = block_scores.detach()
+
+    def _resize_score_reuse_hint(
+        self,
+        score_reuse_hint: torch.Tensor | None,
+        target_blocks: int,
+    ) -> torch.Tensor | None:
+        if score_reuse_hint is None:
+            return None
+        if score_reuse_hint.shape[-1] == target_blocks:
+            return score_reuse_hint
+        if score_reuse_hint.shape[-1] < target_blocks:
+            return None
+        return score_reuse_hint[..., :target_blocks]
 
     def _record_block_states(
         self,

@@ -285,22 +285,17 @@ def test_block_wise_press_handles_short_tail_blocks_with_simple_summaries():
     assert result_values.shape[2] == 5
 
 
-def test_block_wise_press_cross_layer_score_residual_smooths_next_layer():
+def test_block_wise_press_score_reuse_hint_can_adjust_selection_scores():
     keys, values = make_kv(seq_len=8)
     hidden_states = make_hidden_states(8)
     layer0 = DummyModule(layer_idx=0)
-    layer1 = DummyModule(layer_idx=1)
-    with torch.no_grad():
-        layer1.q_proj.weight.zero_()
-
     press = BlockWisePress(
         compression_ratio=0.5,
         block_size=2,
         q_window_size=4,
-        cross_layer_score_residual_weight=0.25,
     )
 
-    analysis0 = press.analyze_blocks(
+    plan = press.build_block_plan(
         layer0,
         hidden_states,
         keys,
@@ -308,42 +303,25 @@ def test_block_wise_press_cross_layer_score_residual_smooths_next_layer():
         None,
         {"cache_position": torch.tensor([8])},
         force_refresh_summary=True,
+        score_reuse_hint=torch.full((1, 4), 10000.0),
+        score_reuse_weight=0.5,
     )
-    analysis1 = press.analyze_blocks(
-        layer1,
-        hidden_states,
-        keys,
-        values,
-        None,
-        {"cache_position": torch.tensor([8])},
-        force_refresh_summary=True,
-    )
-
-    assert torch.allclose(analysis1["raw_block_scores"], torch.zeros_like(analysis1["raw_block_scores"]))
-    assert analysis1["previous_layer_block_scores"] is not None
-    assert torch.allclose(
-        analysis1["block_scores"],
-        0.25 * analysis0["block_scores"],
-        atol=1e-5,
-    )
+    assert plan["score_reuse_applied"] is True
+    assert plan["reused_block_scores"] is not None
+    assert torch.all(plan["block_scores"] > plan["raw_block_scores"])
 
 
-def test_block_wise_press_cross_layer_cache_resets_on_new_forward_signature():
+def test_block_wise_press_ignores_mismatched_score_reuse_hint_shapes():
     keys, values = make_kv(seq_len=8)
     hidden_states = make_hidden_states(8)
     layer0 = DummyModule(layer_idx=0)
-    layer1 = DummyModule(layer_idx=1)
-    with torch.no_grad():
-        layer1.q_proj.weight.zero_()
-
     press = BlockWisePress(
         compression_ratio=0.5,
         block_size=2,
         q_window_size=4,
-        cross_layer_score_residual_weight=0.25,
     )
 
-    press.analyze_blocks(
+    plan = press.build_block_plan(
         layer0,
         hidden_states,
         keys,
@@ -351,32 +329,12 @@ def test_block_wise_press_cross_layer_cache_resets_on_new_forward_signature():
         None,
         {"cache_position": torch.tensor([8])},
         force_refresh_summary=True,
-    )
-    press.analyze_blocks(
-        layer1,
-        hidden_states,
-        keys,
-        values,
-        None,
-        {"cache_position": torch.tensor([8])},
-        force_refresh_summary=True,
-    )
-    new_step_analysis = press.analyze_blocks(
-        layer1,
-        hidden_states,
-        keys,
-        values,
-        None,
-        {"cache_position": torch.tensor([9])},
-        force_refresh_summary=True,
+        score_reuse_hint=torch.ones(1, 3),
+        score_reuse_weight=0.5,
     )
 
-    assert new_step_analysis["previous_layer_block_scores"] is None
-    assert torch.allclose(
-        new_step_analysis["block_scores"],
-        torch.zeros_like(new_step_analysis["block_scores"]),
-        atol=1e-5,
-    )
+    assert plan["score_reuse_applied"] is False
+    assert torch.allclose(plan["block_scores"], plan["raw_block_scores"])
     summary = press.last_block_summary[layer0.layer_idx]
     assert summary["mean_keys"].shape == summary["topk_key_means"].shape
 
@@ -405,6 +363,7 @@ def test_block_wise_press_recent_blocks_expand_keep_budget():
         compression_ratio=0.5,
         block_size=2,
         q_window_size=4,
+        prefix_sink_blocks=0,
         protected_recent_blocks=1,
     )
     layer0 = DummyModule(layer_idx=0)
@@ -425,11 +384,38 @@ def test_block_wise_press_recent_blocks_expand_keep_budget():
     assert 24.0 in kept_tokens and 28.0 in kept_tokens
 
 
+def test_block_wise_press_prefix_sink_blocks_are_kept():
+    press = BlockWisePress(
+        compression_ratio=0.5,
+        block_size=2,
+        q_window_size=4,
+        prefix_sink_blocks=1,
+        protected_recent_blocks=0,
+    )
+    layer0 = DummyModule(layer_idx=0)
+    keys, values = make_kv(seq_len=8)
+
+    compressed_keys, compressed_values = press.compress(
+        layer0,
+        make_hidden_states(8),
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+    )
+
+    assert compressed_keys.shape[2] == 4
+    assert compressed_values.shape[2] == 4
+    kept_tokens = compressed_keys[0, 0, :, 0].tolist()
+    assert 0.0 in kept_tokens and 4.0 in kept_tokens
+
+
 def test_block_wise_press_extreme_compression_can_override_recent_blocks(caplog):
     press = BlockWisePress(
         compression_ratio=0.99,
         block_size=2,
         q_window_size=4,
+        prefix_sink_blocks=1,
         protected_recent_blocks=3,
     )
     layer0 = DummyModule(layer_idx=0)
