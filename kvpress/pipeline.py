@@ -175,7 +175,7 @@ class KVPressTextGenerationPipeline(Pipeline):
         input_tensors: dict[str, GenericTensor],
         max_new_tokens: int = 50,
         press: Optional[BasePress] = None,
-        cache: Optional[Cache] = None,
+        cache: Optional[Cache] = None, 
     ):
         """
         Execute KV cache compression and text generation pipeline.

@@ -12,6 +12,28 @@ from collections import Counter
 from tqdm import tqdm
 
 
+def _unwrap_singleton(value):
+    """Convert singleton list/array-like labels to a scalar when possible."""
+    if hasattr(value, "tolist") and not isinstance(value, (str, bytes)):
+        value = value.tolist()
+    while isinstance(value, list) and len(value) == 1:
+        value = value[0]
+        if hasattr(value, "tolist") and not isinstance(value, (str, bytes)):
+            value = value.tolist()
+    return value
+
+
+def _coerce_scalar_score(score) -> float:
+    """Make metric return values robust to numpy / list wrappers."""
+    if hasattr(score, "tolist") and not isinstance(score, (str, bytes)):
+        score = score.tolist()
+    while isinstance(score, list) and len(score) == 1:
+        score = score[0]
+        if hasattr(score, "tolist") and not isinstance(score, (str, bytes)):
+            score = score.tolist()
+    return float(score)
+
+
 def calculate_metrics(df):
     preds = df["predicted_answer"].tolist()
     labels = df["answer"].tolist()
@@ -144,8 +166,7 @@ def split_retrieval_answer(pred: str):
 
 
 def get_score_one_kv_retrieval(pred, label, model_name: str) -> bool:
-    if isinstance(label, list):
-        label = label[0]
+    label = _unwrap_singleton(label)
     for c in ["\n", ":", '"', "'", ".", ",", "?", "!", "{", "}"]:
         pred = pred.replace(c, " ")
     words = pred.split()
@@ -153,14 +174,12 @@ def get_score_one_kv_retrieval(pred, label, model_name: str) -> bool:
 
 
 def get_score_one_passkey(pred, label, model_name: str) -> bool:
-    if isinstance(label, list):
-        label = label[0]
+    label = _unwrap_singleton(label)
     return label == first_int_match(pred)
 
 
 def get_score_one_number_string(pred, label, model_name: str) -> bool:
-    if isinstance(label, list):
-        label = label[0]
+    label = _unwrap_singleton(label)
     return label == first_int_match(pred)
 
 
@@ -168,8 +187,7 @@ def get_score_one_code_run(pred, label, model_name: str) -> bool:
     """
     Returns the score of one example in Code.Run.
     """
-    if isinstance(label, list):
-        label = label[0]
+    label = _unwrap_singleton(label)
     pred = pred.strip()
     for c in ["\n", ".", "`", "'", '"', ":"]:
         pred = pred.replace(c, " ")
@@ -227,9 +245,7 @@ def get_score_one_code_debug(pred, label, model_name: str) -> bool:
 
 
 def get_score_one_math_find(pred, label, model_name: str) -> bool:
-    if isinstance(label, list):
-        # In math_find, there is always only one label.
-        label = label[0]
+    label = _unwrap_singleton(label)
     if isinstance(label, int):
         # Find first int or float
         first_num = re.search(r"\d+\.\d+|\d+", pred)
@@ -249,6 +265,9 @@ def get_score_one_math_find(pred, label, model_name: str) -> bool:
 
 
 def get_score_one_longdialogue_qa_eng(pred, label, model_name: str) -> int:
+    label = _unwrap_singleton(label)
+    if isinstance(label, str):
+        label = [label]
     pred = pred.strip()
     pred = pred.upper()
     for item in label:
@@ -258,6 +277,9 @@ def get_score_one_longdialogue_qa_eng(pred, label, model_name: str) -> int:
 
 
 def get_score_one_longbook_choice_eng(pred, label, model_name: str) -> bool:
+    label = _unwrap_singleton(label)
+    if isinstance(label, str):
+        label = [label]
     # Just use the first letter as the prediction
     pred = pred.strip()
     pattern = r"\b[A-D]\b(?!.*\b[A-D]\b)"
@@ -306,14 +328,21 @@ def get_score_one_longbook_choice_eng(pred, label, model_name: str) -> bool:
 
 
 def get_score_one_longbook_qa_eng(pred, label, model_name: str) -> float:
+    label = _unwrap_singleton(label)
+    if isinstance(label, str):
+        label = [label]
     return qa_f1_score(pred, label)
 
 
 def get_score_one_longbook_qa_chn(pred, label, model_name: str) -> float:
+    label = _unwrap_singleton(label)
+    if isinstance(label, str):
+        label = [label]
     return qa_f1_score_zh(pred, label)
 
 
 def get_score_one_math_calc(pred, label, model_name: str) -> float:
+    label = _unwrap_singleton(label)
     assert isinstance(label, list), f"Expected list, got {type(label)}"
     # assert isinstance(pred, list), f"Expected list, got {type(pred)}"
     if isinstance(label[0], list):
@@ -368,7 +397,7 @@ def get_score_one(pred: str, label: str, task_name: str, model_name: str) -> flo
         raise AssertionError("Longbook sum task is not supported due to a conflict with rouge library. ")
     assert task_name in NAME_TO_SCORE_GETTER, f"Invalid task name: {task_name}"
     score = NAME_TO_SCORE_GETTER[task_name](pred, label, model_name)
-    return float(score)
+    return _coerce_scalar_score(score)
 
 
 def get_labels(preds: list) -> list[str]:
