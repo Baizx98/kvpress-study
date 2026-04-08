@@ -461,12 +461,17 @@ class EvaluationRunner:
             if self.config.compression_interval is not None:
                 press.compression_interval = self.config.compression_interval
 
-            # Simplest behavior: use compression_ratio as default for all layers/phases.
-            press.default_phase_ratios = [compression_ratio, compression_ratio]
+            # For this evaluation harness, DualPhasePerLayerPress is used as a
+            # non-permanent block selector: keep all KV physically, and let
+            # `compression_ratio` denote the active block ratio for both phases.
+            press.default_phase_ratios = [0.0, 0.0]
+            press.default_phase_cold_ratios = [compression_ratio, compression_ratio]
             press.layer_phase_ratios = {}
+            press.layer_phase_cold_ratios = {}
 
             logger.info(
-                f"Set DualPhasePerLayerPress compression_ratio={compression_ratio}, compression_interval={press.compression_interval}"
+                "Set DualPhasePerLayerPress non-permanent mode "
+                f"(permanent_ratio=0.0, active_ratio={compression_ratio}, compression_interval={press.compression_interval})"
             )
         elif isinstance(press, DecodingPress):
             press.compression_interval = (

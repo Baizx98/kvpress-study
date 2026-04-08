@@ -178,6 +178,29 @@ def test_decode_cold_blocks_are_masked_without_physical_deletion():
     assert len(seq_indices) > 0
 
 
+def test_prefill_cold_blocks_can_be_masked_without_physical_deletion():
+    press = build_press(
+        layer_phase_ratios={0: [0.0, 0.0]},
+        layer_phase_cold_ratios={0: [0.5, 0.5]},
+    )
+    layer0 = DummyModule(layer_idx=0)
+    keys, values = make_kv(seq_len=8)
+
+    kept_keys, kept_values = press.compress(
+        layer0,
+        make_hidden_states(8),
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+    )
+
+    assert kept_keys.shape[2] == 8
+    assert kept_values.shape[2] == 8
+    assert layer0.masked_key_indices is not None
+    assert press.layer_block_states[layer0.layer_idx]["permanently_deleted"].shape[1] == 0
+
+
 def test_decode_can_mix_permanent_delete_and_temporary_cold_blocks():
     press = build_press(
         layer_phase_ratios={0: [0.0, 0.5]},

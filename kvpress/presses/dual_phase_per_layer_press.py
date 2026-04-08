@@ -153,6 +153,45 @@ class DualPhasePerLayerPress(BasePress):
         force_refresh_summary = bool(kwargs.get("_force_refresh_summary", False))
 
         if phase == "prefill":
+            if ratio == 0.0 and cold_ratio > 0.0:
+                score_reuse_hint = self._resolve_score_reuse_hint(layer_idx, phase)
+                retained_plan = active_press.build_block_plan(
+                    module,
+                    hidden_states,
+                    keys,
+                    values,
+                    attentions,
+                    kwargs,
+                    compression_ratio=cold_ratio,
+                    force_refresh_summary=force_refresh_summary,
+                    score_reuse_hint=score_reuse_hint,
+                    score_reuse_weight=self.score_reuse_weight,
+                )
+                active_block_indices = retained_plan["kept_block_indices"]
+                deleted_block_indices = torch.empty(
+                    keys.shape[0],
+                    0,
+                    dtype=torch.long,
+                    device=keys.device,
+                )
+                cached_mask = self._build_mask_from_active_blocks(
+                    keys,
+                    active_press.block_size,
+                    active_block_indices,
+                )
+                self.layer_cached_masks[layer_idx] = cached_mask
+                module.masked_key_indices = cached_mask
+                self._update_score_reuse_cache(layer_idx, retained_plan["block_scores"])
+                self._record_block_states(
+                    layer_idx,
+                    retained_plan["num_blocks"],
+                    retained_plan["block_scores"],
+                    active_block_indices,
+                    deleted_block_indices,
+                )
+                active_press.build_or_refresh_block_summary(module, keys, values, force_refresh=True)
+                return keys, values
+
             original_ratio = active_press.compression_ratio
             active_press.compression_ratio = ratio
             try:
