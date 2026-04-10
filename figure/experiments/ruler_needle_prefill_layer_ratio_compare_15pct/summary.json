@@ -1,0 +1,294 @@
+{
+  "ruler": [
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 1,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 1,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 2,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 2,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 1,
+      "macro": 75.0,
+      "tasks": {
+        "niah_multikey_3": 50.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 1,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 0,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 0,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 2,
+      "macro": 25.0,
+      "tasks": {
+        "niah_multikey_3": 50.0,
+        "niah_single_3": 0.0
+      }
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 0,
+      "macro": 25.0,
+      "tasks": {
+        "niah_multikey_3": 50.0,
+        "niah_single_3": 0.0
+      }
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 2,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 0,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 1,
+      "macro": 25.0,
+      "tasks": {
+        "niah_multikey_3": 50.0,
+        "niah_single_3": 0.0
+      }
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 2,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 2,
+      "macro": 75.0,
+      "tasks": {
+        "niah_multikey_3": 50.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 0,
+      "macro": 75.0,
+      "tasks": {
+        "niah_multikey_3": 50.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 0,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 1,
+      "macro": 100.0,
+      "tasks": {
+        "niah_multikey_3": 100.0,
+        "niah_single_3": 100.0
+      }
+    }
+  ],
+  "needle": [
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 2,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 0,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 2,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 1,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 0,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 1,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 0,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 0,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 1,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 2,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 0,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 1,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 2,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 1,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.7,
+      "skip": 0,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "chunkkv_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 1,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.5,
+      "skip": 2,
+      "rouge_l_f": 0.7096774147762748
+    },
+    {
+      "method": "block_wise_prefill_per_layer",
+      "ratio": 0.3,
+      "skip": 2,
+      "rouge_l_f": 0.7096774147762748
+    }
+  ]
+}
