@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+os.environ.setdefault("HF_HOME", "/Tan/dataset/hf_home")
+os.environ.setdefault("HF_DATASETS_CACHE", "/Tan/dataset/hf_home/datasets")
+os.environ.setdefault("HUGGINGFACE_HUB_CACHE", "/Tan/dataset/hf_home/hub")
 
 import json
 import logging
@@ -34,6 +37,7 @@ from kvpress import (
     ThresholdPress,
     BlockWisePress,
     DualPhasePerLayerPress,
+    PrefillPerLayerRatioPress,
     SnapKVPress,
 )
 
@@ -53,7 +57,7 @@ def _build_dataset_load_kwargs(dataset_id: str, data_dir: str | None) -> dict[st
     if data_dir is None:
         return kwargs
 
-    if dataset_id == "simonjegou/ruler":
+    if dataset_id in {"simonjegou/ruler", "Xnhyacinth/LongBench", "simonjegou/LongBench-v2"}:
         kwargs["name"] = data_dir
     else:
         kwargs["data_dir"] = data_dir
@@ -152,6 +156,7 @@ class EvaluationConfig:
     summary_topk_keys: Optional[int] = None
     protected_recent_blocks: Optional[int] = None
     mean_key_weight: Optional[float] = None
+    prefill_skip_first_layers: Optional[int] = None
     task_filter: Optional[str] = None
     samples_per_task: Optional[int] = None
 
@@ -225,6 +230,10 @@ class EvaluationConfig:
             assert 0.0 <= self.mean_key_weight <= 1.0, (
                 f"mean_key_weight must be between 0.0 and 1.0, got {self.mean_key_weight}"
             )
+        if self.prefill_skip_first_layers is not None:
+            assert self.prefill_skip_first_layers >= 0, (
+                f"prefill_skip_first_layers must be >= 0, got {self.prefill_skip_first_layers}"
+            )
         if self.samples_per_task is not None:
             assert self.samples_per_task > 0, (
                 f"samples_per_task must be > 0, got {self.samples_per_task}"
@@ -288,6 +297,8 @@ class EvaluationConfig:
             components.append(f"recent{self.protected_recent_blocks}")
         if self.mean_key_weight is not None:
             components.append(f"meankeyw{self.mean_key_weight:.2f}")
+        if self.prefill_skip_first_layers is not None:
+            components.append(f"skipfirst{self.prefill_skip_first_layers}")
         if self.task_filter:
             task_tag = "-".join(_normalize_task_filter(self.task_filter))
             components.append(f"tasks{task_tag}")
@@ -498,6 +509,32 @@ class EvaluationRunner:
                 press.protected_recent_blocks = self.config.protected_recent_blocks
             if self.config.mean_key_weight is not None:
                 press.mean_key_weight = self.config.mean_key_weight
+        elif isinstance(press, PrefillPerLayerRatioPress):
+            press.compression_ratio = compression_ratio
+            if self.config.prefill_skip_first_layers is not None:
+                press.skip_first_layers = self.config.prefill_skip_first_layers
+            press.decode_compression_ratio = 0.0
+
+            wrapped_press = press.press
+            if isinstance(wrapped_press, BlockWisePress):
+                assert self.config.block_size is not None, (
+                    "block_size must be set for BlockWisePress-based PrefillPerLayerRatioPress"
+                )
+                wrapped_press.block_size = block_size
+                if self.config.q_window_size is not None:
+                    wrapped_press.q_window_size = self.config.q_window_size
+                if self.config.summary_topk_keys is not None:
+                    wrapped_press.summary_topk_keys = self.config.summary_topk_keys
+                if self.config.protected_recent_blocks is not None:
+                    wrapped_press.protected_recent_blocks = self.config.protected_recent_blocks
+                if self.config.mean_key_weight is not None:
+                    wrapped_press.mean_key_weight = self.config.mean_key_weight
+
+            logger.info(
+                "Set PrefillPerLayerRatioPress "
+                f"(base_ratio={compression_ratio}, skip_first_layers={press.skip_first_layers}, "
+                f"decode_ratio={press.decode_compression_ratio})"
+            )
 
         else:
             if hasattr(press, "compression_ratio"):

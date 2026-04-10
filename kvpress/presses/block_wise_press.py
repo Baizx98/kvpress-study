@@ -43,6 +43,8 @@ class BlockWisePress(BasePress):
     last_block_heat: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
     last_block_heat_ema: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
     last_block_summary: dict[int, dict[str, torch.Tensor]] = field(default_factory=dict, init=False, repr=False)
+    last_kept_block_indices: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
+    last_kept_token_indices: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
 
     def __post_init__(self):
         assert 0 <= self.compression_ratio < 1, "compression_ratio must be in [0, 1)"
@@ -391,6 +393,9 @@ class BlockWisePress(BasePress):
             kwargs,
             force_refresh_summary=True,
         )
+        layer_idx = self._resolve_layer_idx(module)
+        self.last_kept_block_indices[layer_idx] = plan["kept_block_indices"].detach().clone()
+        self.last_kept_token_indices[layer_idx] = plan["token_indices"].detach().clone()
         compressed_keys, compressed_values = self.gather_by_token_indices(
             keys, values, plan["token_indices"]
         )

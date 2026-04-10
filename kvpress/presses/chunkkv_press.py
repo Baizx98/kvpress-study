@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import torch
 from torch import nn
@@ -33,12 +33,19 @@ class ChunkKVPress(BasePress):
 
     press: ScorerPress
     chunk_length: int = 20
+    last_kept_token_indices: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
 
     def __post_init__(self):
         assert isinstance(self.press, ScorerPress), "ChunkKVPress requires a ScorerPress as input"
 
     def post_init_from_model(self, model):
         self.press.post_init_from_model(model)
+
+    def _resolve_layer_idx(self, module: nn.Module) -> int:
+        raw = getattr(module, "layer_idx", 0)
+        if isinstance(raw, torch.Tensor):
+            return int(raw.item())
+        return int(raw)
 
     @property
     def compression_ratio(self):
@@ -104,19 +111,23 @@ class ChunkKVPress(BasePress):
         top_chunks = chunk_scores.topk(n_chunks_kept, dim=-1)
 
         # 4. Create indices for selected chunks
-        indices = []
-        for chunk_idx in top_chunks.indices[0]:
-            if chunk_idx < num_complete_chunks:
-                # For complete chunks
-                start_idx = chunk_idx * self.chunk_length
-                chunk_indices = torch.arange(start_idx, start_idx + self.chunk_length, device=keys.device)
-            else:
-                # For the remaining partial chunk
-                chunk_indices = torch.arange(num_complete_chunks * self.chunk_length, kv_len, device=keys.device)
-            indices.append(chunk_indices)
+        token_indices_per_batch = []
+        for batch_idx in range(top_chunks.indices.shape[0]):
+            batch_token_indices = []
+            for chunk_idx in top_chunks.indices[batch_idx]:
+                if chunk_idx < num_complete_chunks:
+                    start_idx = chunk_idx * self.chunk_length
+                    chunk_indices = torch.arange(start_idx, start_idx + self.chunk_length, device=keys.device)
+                else:
+                    chunk_indices = torch.arange(num_complete_chunks * self.chunk_length, kv_len, device=keys.device)
+                batch_token_indices.append(chunk_indices)
 
-        indices = torch.cat(indices).sort()[0]
-        indices = indices.view(1, 1, -1, 1).expand(keys.shape[0], keys.shape[1], -1, module.head_dim)
+            batch_token_indices = torch.cat(batch_token_indices).sort()[0]
+            token_indices_per_batch.append(batch_token_indices)
+
+        token_indices = torch.stack(token_indices_per_batch, dim=0)
+        self.last_kept_token_indices[self._resolve_layer_idx(module)] = token_indices.detach().clone()
+        indices = token_indices[:, None, :, None].expand(keys.shape[0], keys.shape[1], -1, module.head_dim)
 
         # 5. Use gather to collect selected keys and values
         keys = keys.gather(2, indices).contiguous()

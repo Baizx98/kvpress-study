@@ -28,6 +28,7 @@ from kvpress.presses.leverage_press import LeverageScorePress
 from kvpress.presses.non_causal_attention_press import NonCausalAttnPress
 from kvpress.presses.observed_attention_press import ObservedAttentionPress
 from kvpress.presses.per_layer_compression_press import PerLayerCompressionPress
+from kvpress.presses.prefill_per_layer_ratio_press import PrefillPerLayerRatioPress
 from kvpress.presses.prefill_decoding_press import PrefillDecodingPress
 from kvpress.presses.dual_phase_per_layer_press import DualPhasePerLayerPress
 from kvpress.presses.pyramidkv_press import PyramidKVPress
@@ -64,6 +65,7 @@ __all__ = [
     "TOVAPress",
     "KVPressTextGenerationPipeline",
     "PerLayerCompressionPress",
+    "PrefillPerLayerRatioPress",
     "KeyRerotationPress",
     "ChunkPress",
     "DuoAttentionPress",

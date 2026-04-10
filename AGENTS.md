@@ -20,3 +20,9 @@
 ## Safety
 - Before reorganizing experiment outputs, preserve raw artifacts and keep paths reproducible.
 - If a task would move or rename result directories referenced by scripts, update the affected scripts or docs in the same change.
+
+## Default Paths
+- Unless explicitly overridden by the user, treat the default local roots as:
+  - Models: `~/Tan/model`
+  - Datasets/cache: `~/Tan/dataset`
+- New evaluation scripts and data/model loading changes should follow these defaults for consistency.
