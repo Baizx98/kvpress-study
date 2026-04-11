@@ -41,6 +41,7 @@ from kvpress import (
     ObservedAttentionPress,
     PyramidKVPress,
     QFilterPress,
+    QuestBlockwisePress,
     RandomPress,
     SnapKVPress,
     StreamingLLMPress,
@@ -132,6 +133,8 @@ PRESS_REGISTRY = {
     "decoding_keydiff": DecodingPress(base_press=KeyDiffPress()),
     "block_wise": BlockWisePress(),
     "block_wise_prefill_per_layer": PrefillPerLayerRatioPress(press=BlockWisePress()),
+    "quest_blockwise": QuestBlockwisePress(),
+    "quest_blockwise_prefill_per_layer": PrefillPerLayerRatioPress(press=QuestBlockwisePress()),
     "block_wise_legacy": BlockWisePress(
         summary_topk_keys=1,
         mean_key_weight=0.5,

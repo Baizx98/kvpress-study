@@ -7,6 +7,7 @@ os.environ.setdefault("HF_DATASETS_CACHE", "/Tan/dataset/hf_home/datasets")
 os.environ.setdefault("HUGGINGFACE_HUB_CACHE", "/Tan/dataset/hf_home/hub")
 
 import json
+import hashlib
 import logging
 import random
 import sys
@@ -32,6 +33,7 @@ from kvpress import (
     DuoAttentionPress,
     FinchPress,
     ObservedAttentionPress,
+    QuestBlockwisePress,
     ScorerPress,
     ThinKPress,
     ThresholdPress,
@@ -42,6 +44,32 @@ from kvpress import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _compact_component(value: str, max_len: int = 48) -> str:
+    if len(value) <= max_len:
+        return value
+    digest = hashlib.sha1(value.encode("utf-8")).hexdigest()[:10]
+    keep = max_len - len(digest) - 1
+    return f"{value[:keep]}-{digest}"
+
+
+def _compact_dir_name(components: list[str], max_len: int = 180) -> str:
+    dir_name = "__".join(_compact_component(str(component)) for component in components if component)
+    if len(dir_name) <= max_len:
+        return dir_name
+
+    digest = hashlib.sha1(dir_name.encode("utf-8")).hexdigest()[:12]
+    compact_components = [
+        _compact_component(str(component), max_len=20)
+        for component in components
+        if component
+    ]
+    fallback = "__".join(compact_components[:8])
+    fallback = f"{fallback}__{digest}"
+    if len(fallback) <= max_len:
+        return fallback
+    return digest
 
 
 def _build_dataset_load_kwargs(dataset_id: str, data_dir: str | None) -> dict[str, object]:
@@ -156,6 +184,16 @@ class EvaluationConfig:
     summary_topk_keys: Optional[int] = None
     protected_recent_blocks: Optional[int] = None
     mean_key_weight: Optional[float] = None
+    summary_mode: Optional[str] = None
+    representative_mode: Optional[str] = None
+    query_agg_mode: Optional[str] = None
+    head_agg_mode: Optional[str] = None
+    representative_k: Optional[int] = None
+    multi_rep_k: Optional[int] = None
+    query_topr: Optional[int] = None
+    head_topk: Optional[int] = None
+    random_seed: Optional[int] = None
+    quest_score_mode: Optional[str] = None
     prefill_skip_first_layers: Optional[int] = None
     task_filter: Optional[str] = None
     samples_per_task: Optional[int] = None
@@ -230,6 +268,18 @@ class EvaluationConfig:
             assert 0.0 <= self.mean_key_weight <= 1.0, (
                 f"mean_key_weight must be between 0.0 and 1.0, got {self.mean_key_weight}"
             )
+        if self.representative_k is not None:
+            assert self.representative_k > 0, (
+                f"representative_k must be > 0, got {self.representative_k}"
+            )
+        if self.multi_rep_k is not None:
+            assert self.multi_rep_k > 0, (
+                f"multi_rep_k must be > 0, got {self.multi_rep_k}"
+            )
+        if self.query_topr is not None:
+            assert self.query_topr > 0, f"query_topr must be > 0, got {self.query_topr}"
+        if self.head_topk is not None:
+            assert self.head_topk > 0, f"head_topk must be > 0, got {self.head_topk}"
         if self.prefill_skip_first_layers is not None:
             assert self.prefill_skip_first_layers >= 0, (
                 f"prefill_skip_first_layers must be >= 0, got {self.prefill_skip_first_layers}"
@@ -297,6 +347,26 @@ class EvaluationConfig:
             components.append(f"recent{self.protected_recent_blocks}")
         if self.mean_key_weight is not None:
             components.append(f"meankeyw{self.mean_key_weight:.2f}")
+        if self.summary_mode is not None:
+            components.append(f"summary{self.summary_mode}")
+        if self.representative_mode is not None:
+            components.append(f"rep{self.representative_mode}")
+        if self.query_agg_mode is not None:
+            components.append(f"qagg{self.query_agg_mode}")
+        if self.head_agg_mode is not None:
+            components.append(f"hagg{self.head_agg_mode}")
+        if self.representative_k is not None:
+            components.append(f"repk{self.representative_k}")
+        if self.multi_rep_k is not None:
+            components.append(f"multirep{self.multi_rep_k}")
+        if self.query_topr is not None:
+            components.append(f"qtopr{self.query_topr}")
+        if self.head_topk is not None:
+            components.append(f"htopk{self.head_topk}")
+        if self.random_seed is not None:
+            components.append(f"pressseed{self.random_seed}")
+        if self.quest_score_mode is not None:
+            components.append(f"quest{self.quest_score_mode}")
         if self.prefill_skip_first_layers is not None:
             components.append(f"skipfirst{self.prefill_skip_first_layers}")
         if self.task_filter:
@@ -307,7 +377,7 @@ class EvaluationConfig:
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
 
-        dir_name = "__".join(filter(None, components))  # Filter None/empty strings
+        dir_name = _compact_dir_name(components)
         config_dir = output_dir / dir_name
 
         # Make sure the directory does not exist, if it does, add a number to the end
@@ -427,6 +497,41 @@ class EvaluationRunner:
 
         press = PRESS_REGISTRY[press_name]
 
+        def _apply_blockwise_config(target_press: BlockWisePress):
+            target_press.compression_ratio = compression_ratio
+            assert self.config.block_size is not None, (
+                "block_size must be set for BlockWisePress-based methods"
+            )
+            target_press.block_size = block_size
+            if self.config.q_window_size is not None:
+                target_press.q_window_size = self.config.q_window_size
+            if self.config.summary_topk_keys is not None:
+                target_press.summary_topk_keys = self.config.summary_topk_keys
+            if self.config.protected_recent_blocks is not None:
+                target_press.protected_recent_blocks = self.config.protected_recent_blocks
+            if self.config.mean_key_weight is not None:
+                target_press.mean_key_weight = self.config.mean_key_weight
+            if self.config.summary_mode is not None:
+                target_press.summary_mode = self.config.summary_mode
+            if self.config.representative_mode is not None:
+                target_press.representative_mode = self.config.representative_mode
+            if self.config.query_agg_mode is not None:
+                target_press.query_agg_mode = self.config.query_agg_mode
+            if self.config.head_agg_mode is not None:
+                target_press.head_agg_mode = self.config.head_agg_mode
+            if self.config.representative_k is not None:
+                target_press.representative_k = self.config.representative_k
+            if self.config.multi_rep_k is not None:
+                target_press.multi_rep_k = self.config.multi_rep_k
+            if self.config.query_topr is not None:
+                target_press.query_topr = self.config.query_topr
+            if self.config.head_topk is not None:
+                target_press.head_topk = self.config.head_topk
+            if self.config.random_seed is not None:
+                target_press.random_seed = self.config.random_seed
+            if isinstance(target_press, QuestBlockwisePress) and self.config.quest_score_mode is not None:
+                target_press.quest_score_mode = self.config.quest_score_mode
+
         # Apply compression ratios based on press type
         if isinstance(press, DuoAttentionPress):
             press.head_compression_ratio = compression_ratio
@@ -496,19 +601,7 @@ class EvaluationRunner:
                 f"Set DecodingPress compression_interval to {self.config.compression_interval}, target_size to {self.config.target_size}, hidden_states_buffer_size to {self.config.hidden_states_buffer_size}"
             )
         elif isinstance(press, BlockWisePress):
-            press.compression_ratio = compression_ratio
-            assert self.config.block_size is not None, (
-                "block_size must be set for BlockWisePress"
-            )
-            press.block_size = block_size
-            if self.config.q_window_size is not None:
-                press.q_window_size = self.config.q_window_size
-            if self.config.summary_topk_keys is not None:
-                press.summary_topk_keys = self.config.summary_topk_keys
-            if self.config.protected_recent_blocks is not None:
-                press.protected_recent_blocks = self.config.protected_recent_blocks
-            if self.config.mean_key_weight is not None:
-                press.mean_key_weight = self.config.mean_key_weight
+            _apply_blockwise_config(press)
         elif isinstance(press, PrefillPerLayerRatioPress):
             press.compression_ratio = compression_ratio
             if self.config.prefill_skip_first_layers is not None:
@@ -517,18 +610,7 @@ class EvaluationRunner:
 
             wrapped_press = press.press
             if isinstance(wrapped_press, BlockWisePress):
-                assert self.config.block_size is not None, (
-                    "block_size must be set for BlockWisePress-based PrefillPerLayerRatioPress"
-                )
-                wrapped_press.block_size = block_size
-                if self.config.q_window_size is not None:
-                    wrapped_press.q_window_size = self.config.q_window_size
-                if self.config.summary_topk_keys is not None:
-                    wrapped_press.summary_topk_keys = self.config.summary_topk_keys
-                if self.config.protected_recent_blocks is not None:
-                    wrapped_press.protected_recent_blocks = self.config.protected_recent_blocks
-                if self.config.mean_key_weight is not None:
-                    wrapped_press.mean_key_weight = self.config.mean_key_weight
+                _apply_blockwise_config(wrapped_press)
 
             logger.info(
                 "Set PrefillPerLayerRatioPress "

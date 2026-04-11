@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 import logging
 import math
@@ -8,9 +10,18 @@ from typing import Any
 
 import torch
 from torch import nn
-from transformers.models.llama.modeling_llama import repeat_kv
 
 from kvpress.presses.base_press import BasePress
+from kvpress.presses.blockwise_components import (
+    HEAD_AGG_MODES,
+    QUERY_AGG_MODES,
+    REPRESENTATIVE_MODES,
+    SUMMARY_MODES,
+    aggregate_head_scores,
+    aggregate_query_scores,
+    resolve_query_topr,
+    select_representative_indices,
+)
 from kvpress.utils import get_prerope_query_states
 
 
@@ -20,14 +31,13 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BlockWisePress(BasePress):
     """
-    Low-overhead block-granularity KV compression with compact block summaries.
+    Configurable block-granularity KV compression for prefill.
 
-    Each block is represented by:
-    - a mean key for the whole block
-    - a mean key over the top-k highest-norm tokens in the block
-
-    The last question-aware queries interact only with these summaries, which
-    keeps both compute and metadata cost low enough for future block offload.
+    The implementation is split into four independently configurable steps:
+    1. build block summaries
+    2. select block-internal representatives
+    3. aggregate the tail query window
+    4. aggregate head-level block scores
     """
 
     compression_ratio: float = 0.0
@@ -39,6 +49,16 @@ class BlockWisePress(BasePress):
     protected_recent_blocks: int = 2
     eps: float = 1e-6
     require_question_aware: bool = True
+
+    summary_mode: str = "mean_plus_norm_topk_mean"
+    representative_mode: str = "key_norm"
+    query_agg_mode: str = "mean"
+    head_agg_mode: str = "uniform_mean"
+    representative_k: int = 4
+    multi_rep_k: int = 4
+    query_topr: int | None = None
+    head_topk: int = 1
+    random_seed: int = 42
 
     last_block_heat: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
     last_block_heat_ema: dict[int, torch.Tensor] = field(default_factory=dict, init=False, repr=False)
@@ -54,6 +74,19 @@ class BlockWisePress(BasePress):
         assert 0 <= self.mean_key_weight <= 1, "mean_key_weight must be in [0, 1]"
         assert self.prefix_sink_blocks >= 0, "prefix_sink_blocks must be >= 0"
         assert self.protected_recent_blocks >= 0, "protected_recent_blocks must be >= 0"
+        assert self.summary_mode in SUMMARY_MODES, f"Unsupported summary_mode: {self.summary_mode}"
+        assert self.representative_mode in REPRESENTATIVE_MODES, (
+            f"Unsupported representative_mode: {self.representative_mode}"
+        )
+        assert self.query_agg_mode in QUERY_AGG_MODES, (
+            f"Unsupported query_agg_mode: {self.query_agg_mode}"
+        )
+        assert self.head_agg_mode in HEAD_AGG_MODES, (
+            f"Unsupported head_agg_mode: {self.head_agg_mode}"
+        )
+        assert self.representative_k > 0, "representative_k must be > 0"
+        assert self.multi_rep_k > 0, "multi_rep_k must be > 0"
+        assert self.head_topk > 0, "head_topk must be > 0"
 
     def _resolve_layer_idx(self, module: nn.Module) -> int:
         raw = getattr(module, "layer_idx", 0)
@@ -67,6 +100,12 @@ class BlockWisePress(BasePress):
     def _resolve_summary_topk(self) -> int:
         return min(self.summary_topk_keys, self.block_size)
 
+    def _resolve_representative_k(self) -> int:
+        return min(self.representative_k, self.block_size)
+
+    def _resolve_multi_rep_k(self) -> int:
+        return min(self.multi_rep_k, self.block_size)
+
     def blend_score_reuse_hint(
         self,
         block_scores: torch.Tensor,
@@ -77,20 +116,45 @@ class BlockWisePress(BasePress):
             return block_scores, False
         if score_reuse_hint.shape != block_scores.shape:
             return block_scores, False
-        blended = (
-            (1.0 - score_reuse_weight) * block_scores
-            + score_reuse_weight * score_reuse_hint
-        )
+        blended = (1.0 - score_reuse_weight) * block_scores + score_reuse_weight * score_reuse_hint
         return blended, True
 
-    def _summarize_blocks(self, keys: torch.Tensor, values: torch.Tensor) -> dict[str, torch.Tensor]:
+    def _empty_summary(
+        self,
+        keys: torch.Tensor,
+        values: torch.Tensor,
+    ) -> dict[str, torch.Tensor]:
+        bsz, num_key_value_heads, _, head_dim = keys.shape
+        return {
+            "num_blocks": torch.tensor(0, dtype=torch.long, device=keys.device),
+            "mean_keys": keys.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
+            "topk_key_means": keys.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
+            "multi_rep_keys": keys.new_zeros((bsz, num_key_value_heads, 0, 0, head_dim)),
+            "mean_values": values.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
+            "token_counts": torch.zeros((bsz, 0), dtype=torch.long, device=keys.device),
+        }
+
+    def _summarize_blocks(
+        self,
+        module: nn.Module,
+        keys: torch.Tensor,
+        values: torch.Tensor,
+        tail_query_states: torch.Tensor | None = None,
+    ) -> dict[str, torch.Tensor]:
         bsz, num_key_value_heads, key_len, head_dim = keys.shape
         num_blocks = math.ceil(key_len / self.block_size)
+        if num_blocks == 0:
+            return self._empty_summary(keys, values)
+
         topk = self._resolve_summary_topk()
+        representative_k = self._resolve_representative_k()
+        multi_rep_k = self._resolve_multi_rep_k()
+        layer_idx = self._resolve_layer_idx(module)
 
         mean_keys = []
         topk_key_means = []
         mean_values = []
+        multi_rep_keys = []
         token_counts = []
 
         for block_idx in range(num_blocks):
@@ -99,32 +163,47 @@ class BlockWisePress(BasePress):
             block_keys = keys[:, :, start:end]
             block_values = values[:, :, start:end]
             block_len = end - start
-            actual_topk = min(topk, block_len)
 
             mean_keys.append(block_keys.mean(dim=2))
             mean_values.append(block_values.mean(dim=2))
 
-            token_norms = block_keys.norm(dim=-1)
-            topk_token_indices = token_norms.topk(actual_topk, dim=-1).indices
-            gather_index = topk_token_indices[..., None].expand(-1, -1, -1, head_dim)
-            topk_keys = block_keys.gather(2, gather_index)
+            topk_token_indices = select_representative_indices(
+                mode=self.representative_mode,
+                block_keys=block_keys,
+                representative_k=min(topk, representative_k, block_len),
+                block_start=start,
+                layer_idx=layer_idx,
+                seed=self.random_seed,
+                tail_query_states=tail_query_states,
+            )
+            topk_gather = topk_token_indices[..., None].expand(-1, -1, -1, head_dim)
+            topk_keys = block_keys.gather(2, topk_gather)
             topk_key_means.append(topk_keys.mean(dim=2))
 
-            token_counts.append(
-                torch.full((bsz,), block_len, dtype=torch.long, device=keys.device)
+            multi_rep_indices = select_representative_indices(
+                mode=self.representative_mode,
+                block_keys=block_keys,
+                representative_k=min(multi_rep_k, block_len),
+                block_start=start,
+                layer_idx=layer_idx,
+                seed=self.random_seed + 1009,
+                tail_query_states=tail_query_states,
             )
+            multi_rep_gather = multi_rep_indices[..., None].expand(-1, -1, -1, head_dim)
+            selected_keys = block_keys.gather(2, multi_rep_gather)
+            if selected_keys.shape[2] < multi_rep_k:
+                pad_count = multi_rep_k - selected_keys.shape[2]
+                pad_source = selected_keys[:, :, -1:, :].expand(-1, -1, pad_count, -1)
+                selected_keys = torch.cat([selected_keys, pad_source], dim=2)
+            multi_rep_keys.append(selected_keys)
 
-        if not mean_keys:
-            return {
-                "mean_keys": keys.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
-                "topk_key_means": keys.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
-                "mean_values": values.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
-                "token_counts": torch.zeros((bsz, 0), dtype=torch.long, device=keys.device),
-            }
+            token_counts.append(torch.full((bsz,), block_len, dtype=torch.long, device=keys.device))
 
         return {
+            "num_blocks": torch.tensor(num_blocks, dtype=torch.long, device=keys.device),
             "mean_keys": torch.stack(mean_keys, dim=2),
             "topk_key_means": torch.stack(topk_key_means, dim=2),
+            "multi_rep_keys": torch.stack(multi_rep_keys, dim=2),
             "mean_values": torch.stack(mean_values, dim=2),
             "token_counts": torch.stack(token_counts, dim=1),
         }
@@ -135,21 +214,77 @@ class BlockWisePress(BasePress):
         keys: torch.Tensor,
         values: torch.Tensor,
         force_refresh: bool = False,
+        tail_query_states: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
         layer_idx = self._resolve_layer_idx(module)
         cached = self.last_block_summary.get(layer_idx)
+        expected_blocks = math.ceil(keys.shape[2] / self.block_size)
         if (
             not force_refresh
             and cached is not None
             and int(cached["key_len"].item()) == keys.shape[2]
-            and cached["mean_keys"].shape[2] == math.ceil(keys.shape[2] / self.block_size)
+            and int(cached["num_blocks"].item()) == expected_blocks
         ):
             return cached
 
-        summary = self._summarize_blocks(keys, values)
+        summary = self._summarize_blocks(module, keys, values, tail_query_states=tail_query_states)
         summary["key_len"] = torch.tensor(keys.shape[2], dtype=torch.long, device=keys.device)
         self.last_block_summary[layer_idx] = summary
         return summary
+
+    def _repeat_kv_queries(self, module: nn.Module, query_states: torch.Tensor, num_key_value_heads: int):
+        num_key_value_groups = module.config.num_attention_heads // num_key_value_heads
+        repeated_queries = query_states.view(
+            query_states.shape[0],
+            num_key_value_heads,
+            num_key_value_groups,
+            query_states.shape[2],
+            query_states.shape[3],
+        ).mean(dim=2)
+        return repeated_queries, num_key_value_groups
+
+    def _score_summary_anchors(
+        self,
+        query_states: torch.Tensor,
+        key_states: torch.Tensor,
+    ) -> torch.Tensor:
+        return torch.einsum("bhqd,bhkd->bhqk", query_states, key_states) / math.sqrt(query_states.shape[-1])
+
+    def _compute_summary_scores_per_head(
+        self,
+        query_states: torch.Tensor,
+        summary: dict[str, torch.Tensor],
+    ) -> torch.Tensor:
+        mean_scores = aggregate_query_scores(
+            self._score_summary_anchors(query_states, summary["mean_keys"]),
+            mode=self.query_agg_mode,
+            topr=resolve_query_topr(query_states.shape[-2], self.query_topr),
+        )
+        if self.summary_mode == "mean_only":
+            return mean_scores
+
+        topk_scores = aggregate_query_scores(
+            self._score_summary_anchors(query_states, summary["topk_key_means"]),
+            mode=self.query_agg_mode,
+            topr=resolve_query_topr(query_states.shape[-2], self.query_topr),
+        )
+        if self.summary_mode == "norm_topk_mean_only":
+            return topk_scores
+        if self.summary_mode == "mean_plus_norm_topk_mean":
+            return self.mean_key_weight * mean_scores + (1.0 - self.mean_key_weight) * topk_scores
+        if self.summary_mode == "multi_rep_max":
+            rep_scores = torch.einsum(
+                "bhqd,bhkrd->bhqkr",
+                query_states,
+                summary["multi_rep_keys"],
+            ) / math.sqrt(query_states.shape[-1])
+            rep_scores = rep_scores.max(dim=-1).values
+            return aggregate_query_scores(
+                rep_scores,
+                mode=self.query_agg_mode,
+                topr=resolve_query_topr(query_states.shape[-2], self.query_topr),
+            )
+        raise ValueError(f"Unsupported summary_mode: {self.summary_mode}")
 
     def analyze_blocks(
         self,
@@ -161,14 +296,11 @@ class BlockWisePress(BasePress):
         kwargs: dict,
         force_refresh_summary: bool = False,
     ) -> dict[str, Any]:
-        del attentions
+        del attentions, kwargs
 
-        bsz, num_key_value_heads, key_len, head_dim = keys.shape
-        summary = self.build_or_refresh_block_summary(
-            module, keys, values, force_refresh=force_refresh_summary
-        )
-
+        bsz, num_key_value_heads, key_len, _ = keys.shape
         if key_len == 0:
+            summary = self._empty_summary(keys, values)
             return {
                 "q_window": 0,
                 "block_summary": summary,
@@ -178,30 +310,22 @@ class BlockWisePress(BasePress):
 
         q_window = self._resolve_q_window(hidden_states.shape[1])
         query_states = get_prerope_query_states(module, hidden_states[:, -q_window:])
-        num_key_value_groups = module.config.num_attention_heads // num_key_value_heads
-        num_blocks = summary["mean_keys"].shape[2]
-
-        mean_key_states = repeat_kv(summary["mean_keys"], num_key_value_groups)
-        topk_key_states = repeat_kv(summary["topk_key_means"], num_key_value_groups)
-
-        mean_scores = torch.matmul(query_states, mean_key_states.transpose(-1, -2)) / math.sqrt(head_dim)
-        topk_scores = torch.matmul(query_states, topk_key_states.transpose(-1, -2)) / math.sqrt(head_dim)
-
-        mean_scores = mean_scores.view(
-            bsz, num_key_value_heads, num_key_value_groups, q_window, num_blocks
-        ).mean(dim=2)
-        topk_scores = topk_scores.view(
-            bsz, num_key_value_heads, num_key_value_groups, q_window, num_blocks
-        ).mean(dim=2)
-
-        block_mean_scores = mean_scores.mean(dim=-2)
-        block_topk_scores = topk_scores.mean(dim=-2)
-        summary_scores_per_head = (
-            self.mean_key_weight * block_mean_scores
-            + (1.0 - self.mean_key_weight) * block_topk_scores
+        kv_query_states, _ = self._repeat_kv_queries(module, query_states, num_key_value_heads)
+        summary = self.build_or_refresh_block_summary(
+            module,
+            keys,
+            values,
+            force_refresh=force_refresh_summary,
+            tail_query_states=kv_query_states if self.representative_mode == "tail_query_relevance" else None,
         )
-        block_scores_per_head = summary_scores_per_head
-        block_scores = block_scores_per_head.mean(dim=1)
+
+        summary_scores_per_head = self._compute_summary_scores_per_head(kv_query_states, summary)
+        block_scores = aggregate_head_scores(
+            summary_scores_per_head,
+            self.head_agg_mode,
+            self.eps,
+            topk=self.head_topk,
+        )
 
         layer_idx = self._resolve_layer_idx(module)
         detached_scores = block_scores.detach()
@@ -216,7 +340,7 @@ class BlockWisePress(BasePress):
             "q_window": q_window,
             "block_summary": summary,
             "summary_scores_per_head": summary_scores_per_head,
-            "block_scores_per_head": block_scores_per_head,
+            "block_scores_per_head": summary_scores_per_head,
             "block_scores": block_scores,
         }
 
@@ -266,9 +390,7 @@ class BlockWisePress(BasePress):
         analysis["reused_block_scores"] = score_reuse_hint
         analysis["score_reuse_applied"] = reuse_applied
         analysis["block_scores"] = blended_block_scores
-        analysis["block_scores_per_head"] = blended_block_scores[:, None, :].expand(
-            -1, keys.shape[1], -1
-        )
+
         key_len = keys.shape[2]
         num_blocks = analysis["block_scores"].shape[-1]
         ratio = self.compression_ratio if compression_ratio is None else compression_ratio

@@ -34,6 +34,7 @@ from kvpress.presses.dual_phase_per_layer_press import DualPhasePerLayerPress
 from kvpress.presses.pyramidkv_press import PyramidKVPress
 from kvpress.presses.qfilter_press import QFilterPress
 from kvpress.presses.random_press import RandomPress
+from kvpress.presses.quest_blockwise_press import QuestBlockwisePress
 from kvpress.presses.scorer_press import ScorerPress
 from kvpress.presses.simlayerkv_press import SimLayerKVPress
 from kvpress.presses.snapkv_press import SnapKVPress
@@ -58,6 +59,7 @@ __all__ = [
     "KnormPress",
     "ObservedAttentionPress",
     "RandomPress",
+    "QuestBlockwisePress",
     "SimLayerKVPress",
     "SnapKVPress",
     "StreamingLLMPress",
