@@ -26,3 +26,7 @@
   - Models: `~/Tan/model`
   - Datasets/cache: `~/Tan/dataset`
 - New evaluation scripts and data/model loading changes should follow these defaults for consistency.
+
+## Evaluation Dataset Priorities
+- For early-stage validation in this repository, the primary evaluation datasets are `LongBench`, `needle_in_haystack`, and `PG19`.
+- `longbench-v2` and `infinitebench` are supplementary benchmarks and should not be used in early validation unless the user explicitly asks for them.

@@ -50,10 +50,25 @@
 | `longbench-e` | `Xnhyacinth/LongBench` | 按长度分桶的 LongBench 版本 |
 | `longbench-v2` | `simonjegou/LongBench-v2` | 选择题式长上下文评测 |
 | `needle_in_haystack` | `alessiodevoto/paul_graham_essays` | 长文检索能力 |
+| `pg19` | `pg19` | 长书级语言建模 benchmark |
 | `aime25` | `alessiodevoto/aime25` | AIME 2025 数学推理 |
 | `math500` | `alessiodevoto/math500` | MATH-500 数学推理 |
 
 ### 2.3 通用输入字段
+
+### 2.3.1 当前项目的数据集选型原则
+
+当前项目已经固定如下实验选型原则：
+
+- 前期验证的主数据集使用 `LongBench`、`needle_in_haystack`、`PG19`
+- `longbench-v2` 和 `infinitebench` 只作为补充 benchmark，不进入前期主验证
+
+原因是：
+
+- `LongBench` 更适合作为真实任务综合主结果
+- `needle_in_haystack` 很适合快速看远距离关键信息是否被压缩破坏
+- `PG19` 提供 language modeling 视角，能补上 continuation/perplexity 信号
+- `longbench-v2` 与 `infinitebench` 更适合作为后期补充分析，而不是前期主线筛选
 
 大多数 benchmark 在本仓库中会被整理成统一字段：
 
@@ -122,6 +137,7 @@
 | LongBench-E | 同 LongBench，但看长度分桶 | 分长度区间分数 | 分析长度增长下的退化趋势 | 长度桶较粗 |
 | LongBench-v2 | 选择题长上下文理解 | 准确率 | 看难度/长度分组稳定性 | 强依赖输出格式 |
 | Needle in a Haystack | 精确检索 | ROUGE | 看压缩是否保留远距离关键片段 | 偏检索，不能代表复杂推理 |
+| PG19 | 长书 continuation language modeling | subword/word perplexity | 看 prefill compression 是否破坏长文本续写建模 | 与 QA/检索分数不能直接混合 |
 | AIME25 | 高难数学推理 | boxed accuracy | 看复杂推理对压缩的敏感性 | 只看最终 boxed 答案 |
 | MATH500 | 通用数学推理 | boxed accuracy | 看推理型任务的鲁棒性 | 同样格式依赖较强 |
 
@@ -459,6 +475,67 @@ InfiniteBench 的优势在于“能力切片细”：
 ### 对 KV 压缩研究的建议
 
 InfiniteBench 非常适合作为能力画像补充集。若你的 block-wise 方法宣称“更保留结构信息或关键 token”，InfiniteBench 往往能比 LongBench 更快看出差异来源。
+
+---
+
+## 4.4.1 PG19
+
+### 数据集简介
+
+PG19 是一个面向长上下文语言建模的 benchmark，原始文本来自 Project Gutenberg 的整本书。官方定位不是问答或检索，而是 long-book continuation language modeling。
+
+本项目通过 [`evaluation/benchmarks/pg19/create_huggingface_dataset.py`](/home10T/bzx/workspace/kvpress-study/evaluation/benchmarks/pg19/create_huggingface_dataset.py) 与 [`evaluation/benchmarks/pg19/calculate_metrics.py`](/home10T/bzx/workspace/kvpress-study/evaluation/benchmarks/pg19/calculate_metrics.py) 完成适配。
+
+### 本项目中的适配方式
+
+由于本仓库原本的主评测链路是生成式 `context/question/answer_prefix -> generated answer`，并不原生支持官方 PG19 那种基于 likelihood 的评测，所以这里单独增加了 PG19 language-modeling 分支：
+
+- 从 `pg19` 的 `test` split 读取整本书文本
+- 用当前模型 tokenizer 切分原文
+- 取前 `max_context_length` 个 token 作为 prefill context
+- 取后续 `pg19_target_tokens` 个 token 作为 continuation target
+- 在可选 prefill compression 下计算 target 的负对数似然
+- 汇总 `subword_perplexity` 与 `word_perplexity`
+
+这比把 PG19 硬改成问答数据更接近官方语义，但仍要明确：
+
+- 当前实现是“固定长前缀 + 固定长度 continuation”的项目内适配
+- 它不是整本书完整滑窗 perplexity 的官方复现实验
+- 更适合用来衡量 prefill compression 对 continuation 建模的影响
+
+### 指标计算方式
+
+当前返回：
+
+- `subword_perplexity`
+- `word_perplexity`
+- `avg_nll_per_token`
+- `avg_nll_per_word`
+
+解释上建议：
+
+- `subword_perplexity` 更贴近当前 tokenizer 下的真实模型建模难度
+- `word_perplexity` 更接近 PG19 文献常见的表达习惯
+
+### 适用场景
+
+- 验证压缩是否伤害长书 continuation 建模
+- 为 `LongBench` 与 `needle_in_haystack` 补上 language modeling 视角
+- 做前期方法筛选时，检测某些方法是否只保留检索信号，却破坏自然续写建模
+
+### 不足与风险
+
+- 不能把 PG19 perplexity 与 LongBench/Needle 的任务分数直接做统一平均
+- 官方 `pg19` Hugging Face 数据集需要 `trust_remote_code=True`
+- 官方 builder 还会下载外部书本文本，网络不稳定时可能失败
+
+### 对 KV 压缩研究的建议
+
+如果你的方法主打 prefill compression，PG19 非常值得和 `LongBench`、`needle_in_haystack` 一起作为前期主验证集合：
+
+- `LongBench`：看真实任务质量
+- `needle_in_haystack`：看远距离关键片段检索
+- `PG19`：看长文本 continuation 建模
 
 ---
 
@@ -887,6 +964,7 @@ MATH500 和 AIME25 可以成对使用。若两者都掉点，通常说明压缩�
 再增加一个定向补充：
 
 - 检索导向：`Needle in a Haystack`
+- language modeling 导向：`PG19`
 - 能力画像导向：`InfiniteBench`
 - 推理导向：`AIME25 + MATH500`
 
@@ -895,8 +973,9 @@ MATH500 和 AIME25 可以成对使用。若两者都掉点，通常说明压缩�
 建议：
 
 - 使用 `fraction < 1.0`
-- 先跑 `LongBench-v2` 或 `RULER`
-- 再挑一两个 LongBench 子任务做 smoke test
+- 先跑 `needle_in_haystack`
+- 再跑一两个 `LongBench` 子任务
+- 最后补一个小规模 `PG19` smoke test
 
 这样反馈更快，适合频繁改 block-wise 逻辑后的 sanity check。
 
@@ -977,6 +1056,7 @@ MATH500 和 AIME25 可以成对使用。若两者都掉点，通常说明压缩�
 - `LongBench` 最适合做综合主结果
 - `RULER` 最适合做长上下文长度与结构化能力分析
 - `Needle in a Haystack` 最适合做远距离关键信息保留分析
+- `PG19` 最适合补足 language modeling 视角
 - `InfiniteBench` 最适合做能力画像和 error analysis
 - `AIME25` / `MATH500` 最适合做推理敏感性验证
 - `Zero Scrolls` 更适合外部提交或补充展示，不适合日常自动评测主线
@@ -984,15 +1064,16 @@ MATH500 和 AIME25 可以成对使用。若两者都掉点，通常说明压缩�
 如果你下一步是继续做 KV 压缩实验，我建议主线先固定为：
 
 1. `LongBench`
-2. `RULER`
-3. `Needle in a Haystack`
+2. `Needle in a Haystack`
+3. `PG19`
 
 然后按你的 claim 再加：
 
+- 长度扩展与合成可控验证：`RULER`
 - 强调推理：`AIME25` + `MATH500`
 - 强调能力画像：`InfiniteBench`
 
-这样你的评测体系会比较完整：既有真实任务，也有合成长上下文，还能覆盖检索、推理和系统 trade-off。
+这样你的评测体系会比较完整：既有真实任务，也有 language modeling 视角，还能覆盖检索、推理和系统 trade-off。
 
 ---
 
@@ -1007,5 +1088,6 @@ MATH500 和 AIME25 可以成对使用。若两者都掉点，通常说明压缩�
 - LongBench scorer：[`evaluation/benchmarks/longbench/calculate_metrics.py`](/home10T/bzx/workspace/kvpress-study/evaluation/benchmarks/longbench/calculate_metrics.py)
 - LongBench-v2 scorer：[`evaluation/benchmarks/longbenchv2/calculate_metrics.py`](/home10T/bzx/workspace/kvpress-study/evaluation/benchmarks/longbenchv2/calculate_metrics.py)
 - Needle scorer：[`evaluation/benchmarks/needle_in_haystack/calculate_metrics.py`](/home10T/bzx/workspace/kvpress-study/evaluation/benchmarks/needle_in_haystack/calculate_metrics.py)
+- PG19 scorer：[`evaluation/benchmarks/pg19/calculate_metrics.py`](/home10T/bzx/workspace/kvpress-study/evaluation/benchmarks/pg19/calculate_metrics.py)
 - AIME25 scorer：[`evaluation/benchmarks/aime25/calculate_metrics.py`](/home10T/bzx/workspace/kvpress-study/evaluation/benchmarks/aime25/calculate_metrics.py)
 - MATH500 scorer：[`evaluation/benchmarks/math500/calculate_metrics.py`](/home10T/bzx/workspace/kvpress-study/evaluation/benchmarks/math500/calculate_metrics.py)
