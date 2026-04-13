@@ -1,14 +1,8 @@
-# Figure Experiment Index
+# Evaluation Result Index
 
-本目录只保留绘图脚本与按实验分组后的图像结果。
+本目录按“正式实验分组”和“零散历史结果”两类组织。
 
-## 绘图脚本
-
-- `plot_prefill_detailed.py`
-- `plot_prefill_sweep.py`
-- `plot_ruler_ablation.py`
-
-## 实验分组
+## 正式实验分组
 
 - `experiments/prefill_sweep_10pct_blockwise_snapkv`
 - `experiments/prefill_compare_15pct_blockwise_chunkkv`
@@ -23,7 +17,15 @@
 - `experiments/blockwise_ablation_ratio70_longbench_stage1`
 
 - `experiments/blockwise_stage2_ratio70_fraction20_multidataset`
-每个实验子目录包含：
+每组实验目录下统一包含：
 
-- 本组图像文件
-- 一个 `README.md`，说明实验设置、配套结果目录、推荐阅读顺序
+- `artifacts/`
+  存放原始 `config.yaml`、`predictions.csv`、`metrics.json`、`run.log`
+- `README.md`
+  说明实验目的、运行脚本、数据集与关键配置
+
+## 历史零散结果
+
+- `ad_hoc_baselines/`
+
+这里保留尚未归并成正式实验组的早期结果，避免信息丢失。

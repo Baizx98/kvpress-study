@@ -1,0 +1,208 @@
+{
+  "ruler:4096": {
+    "blockwise_main": {
+      "score": 39.13666666666666,
+      "detail": "avg=39.14; niah_multikey_3=20.00, niah_single_3=34.62, qa_2=62.79",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/ruler__4096__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__d7f9318f3003"
+    },
+    "blockwise_norm_topk": {
+      "score": 38.63,
+      "detail": "avg=38.63; niah_multikey_3=16.36, niah_single_3=35.58, qa_2=63.95",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/ruler__4096__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__506d768c55da"
+    },
+    "blockwise_multi_rep": {
+      "score": 40.620000000000005,
+      "detail": "avg=40.62; niah_multikey_3=16.36, niah_single_3=40.38, qa_2=65.12",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/ruler__4096__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__47d34a06900f"
+    },
+    "chunkkv_prefill": {
+      "score": 83.61,
+      "detail": "avg=83.61; niah_multikey_3=84.55, niah_single_3=100.00, qa_2=66.28",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/ruler__4096__--Tan--model--Llama-3.1-8B-Instruct__chunkkv_prefill_per_layer__0.70__fraction0.200__query_aware__tasksniah_single_3-niah_multikey_3-qa_2"
+    }
+  },
+  "longbench:qasper": {
+    "blockwise_main": {
+      "score": 40.31,
+      "detail": "40.31",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__qasper__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__d307992eb270"
+    },
+    "blockwise_norm_topk": {
+      "score": 41.51,
+      "detail": "41.51",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__qasper__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__070c33972701"
+    },
+    "blockwise_multi_rep": {
+      "score": 40.61,
+      "detail": "40.61",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__qasper__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__05546d4f1782"
+    },
+    "blockwise_tail_query_special": {
+      "score": 33.24,
+      "detail": "33.24",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__qasper__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__b92e5f89d631"
+    },
+    "chunkkv_prefill": {
+      "score": 39.77,
+      "detail": "39.77",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__qasper__--Tan--model--Llama-3.1-8B-Instruct__chunkkv_prefill_per_layer__0.70__fraction0.200__query_aware"
+    }
+  },
+  "longbench:multifieldqa_en": {
+    "blockwise_main": {
+      "score": 53.74,
+      "detail": "53.74",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__multifieldqa_en__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__f2cd8ed85191"
+    },
+    "blockwise_norm_topk": {
+      "score": 54.14,
+      "detail": "54.14",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__multifieldqa_en__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__87ff79071f4c"
+    },
+    "blockwise_multi_rep": {
+      "score": 56.57,
+      "detail": "56.57",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__multifieldqa_en__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__c46272deaf1f"
+    },
+    "blockwise_tail_query_special": {
+      "score": 44.41,
+      "detail": "44.41",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__multifieldqa_en__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__80cf55313774"
+    },
+    "chunkkv_prefill": {
+      "score": 53.85,
+      "detail": "53.85",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__multifieldqa_en__--Tan--model--Llama-3.1-8B-Instruct__chunkkv_prefill_per_layer__0.70__fraction0.200__query_aware"
+    }
+  },
+  "longbench:hotpotqa": {
+    "blockwise_main": {
+      "score": 56.27,
+      "detail": "56.27",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__hotpotqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__763c7f097491"
+    },
+    "blockwise_norm_topk": {
+      "score": 53.2,
+      "detail": "53.20",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__hotpotqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__7f6fe5442deb"
+    },
+    "blockwise_multi_rep": {
+      "score": 54.37,
+      "detail": "54.37",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__hotpotqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__778ab7256fe4"
+    },
+    "blockwise_tail_query_special": {
+      "score": 53.2,
+      "detail": "53.20",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__hotpotqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__9cd20518c427"
+    },
+    "chunkkv_prefill": {
+      "score": 54.61,
+      "detail": "54.61",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__hotpotqa__--Tan--model--Llama-3.1-8B-Instruct__chunkkv_prefill_per_layer__0.70__fraction0.200__query_aware"
+    }
+  },
+  "longbench:2wikimqa": {
+    "blockwise_main": {
+      "score": 39.12,
+      "detail": "39.12",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__2wikimqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__4a79b13469bb"
+    },
+    "blockwise_norm_topk": {
+      "score": 38.83,
+      "detail": "38.83",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__2wikimqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__adef869c2824"
+    },
+    "blockwise_multi_rep": {
+      "score": 42.56,
+      "detail": "42.56",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__2wikimqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__e760497ce008"
+    },
+    "blockwise_tail_query_special": {
+      "score": 42.87,
+      "detail": "42.87",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__2wikimqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__93b0cea95f51"
+    },
+    "chunkkv_prefill": {
+      "score": 45.13,
+      "detail": "45.13",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__2wikimqa__--Tan--model--Llama-3.1-8B-Instruct__chunkkv_prefill_per_layer__0.70__fraction0.200__query_aware"
+    }
+  },
+  "longbench:musique": {
+    "blockwise_main": {
+      "score": 30.45,
+      "detail": "30.45",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__musique__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__fb9516c484ac"
+    },
+    "blockwise_norm_topk": {
+      "score": 32.62,
+      "detail": "32.62",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__musique__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__b41562a45ddb"
+    },
+    "blockwise_multi_rep": {
+      "score": 31.9,
+      "detail": "31.90",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__musique__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__2b3b5e4bfcf7"
+    },
+    "blockwise_tail_query_special": {
+      "score": 26.24,
+      "detail": "26.24",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__musique__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__4f2bcf3cba31"
+    },
+    "chunkkv_prefill": {
+      "score": 35.63,
+      "detail": "35.63",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__musique__--Tan--model--Llama-3.1-8B-Instruct__chunkkv_prefill_per_layer__0.70__fraction0.200__query_aware"
+    }
+  },
+  "longbench:triviaqa": {
+    "blockwise_main": {
+      "score": 96.0,
+      "detail": "96.00",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__triviaqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__788dd8964c31"
+    },
+    "blockwise_norm_topk": {
+      "score": 96.0,
+      "detail": "96.00",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__triviaqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__f3d459b5ad43"
+    },
+    "blockwise_multi_rep": {
+      "score": 96.0,
+      "detail": "96.00",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__triviaqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__697eba630864"
+    },
+    "blockwise_tail_query_special": {
+      "score": 98.0,
+      "detail": "98.00",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__triviaqa__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__query_aware__qwindow64__96a3b2fd0b49"
+    },
+    "chunkkv_prefill": {
+      "score": 93.0,
+      "detail": "93.00",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/longbench__triviaqa__--Tan--model--Llama-3.1-8B-Instruct__chunkkv_prefill_per_layer__0.70__fraction0.200__query_aware"
+    }
+  },
+  "needle_in_haystack:16384": {
+    "blockwise_main": {
+      "score": 68.21468253297282,
+      "detail": "avg_rouge_l_f=68.21",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__max_context16384__query_aware__qwindow64__f3af82fdc153/2"
+    },
+    "blockwise_norm_topk": {
+      "score": 65.68780080689177,
+      "detail": "avg_rouge_l_f=65.69",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__max_context16384__query_aware__qwindow64__400c40fa3215/2"
+    },
+    "blockwise_multi_rep": {
+      "score": 73.49622991598486,
+      "detail": "avg_rouge_l_f=73.50",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wis-db744f45ea__0.70__fraction0.200__max_context16384__query_aware__qwindow64__977c63ee1127/2"
+    },
+    "chunkkv_prefill": {
+      "score": 70.96774147762747,
+      "detail": "avg_rouge_l_f=70.97",
+      "path": "/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage2_ratio70_fraction20_multidataset/artifacts/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv_prefill_per_layer__0.70__fraction0.200__max_context16384__query_aware__needle_depth[0, 25, 50, 75, 100]/2"
+    }
+  }
+}
