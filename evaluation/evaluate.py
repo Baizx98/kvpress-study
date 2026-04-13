@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+import contextlib
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 os.environ.setdefault("HF_HOME", "/Tan/dataset/hf_home")
@@ -18,13 +19,19 @@ from typing import Any, Dict, Optional
 import numpy as np
 import pandas as pd
 import torch
+import torch.nn.functional as F
 import yaml
 from benchmarks.needle_in_haystack.utils import insert_needle_in_haystack
+from benchmarks.pg19.create_huggingface_dataset import (
+    DEFAULT_PG19_DATASET_ID,
+    build_pg19_evaluation_dataframe,
+    load_pg19_source_dataframe,
+)
 from datasets import load_dataset
 from evaluate_registry import DATASET_REGISTRY, PRESS_REGISTRY, SCORER_REGISTRY
 from fire import Fire
 from tqdm import tqdm
-from transformers import FineGrainedFP8Config, Pipeline, pipeline
+from transformers import DynamicCache, FineGrainedFP8Config, Pipeline, pipeline
 
 from kvpress import (
     ChunkKVPress,
@@ -197,6 +204,8 @@ class EvaluationConfig:
     prefill_skip_first_layers: Optional[int] = None
     task_filter: Optional[str] = None
     samples_per_task: Optional[int] = None
+    pg19_target_tokens: Optional[int] = None
+    pg19_source_dataset: Optional[str] = None
 
     # Dataset and generation parameters
     fraction: float = 1.0
@@ -288,6 +297,10 @@ class EvaluationConfig:
             assert self.samples_per_task > 0, (
                 f"samples_per_task must be > 0, got {self.samples_per_task}"
             )
+        if self.pg19_target_tokens is not None:
+            assert self.pg19_target_tokens > 0, (
+                f"pg19_target_tokens must be > 0, got {self.pg19_target_tokens}"
+            )
 
         # Validate fraction
         assert 0.0 < self.fraction <= 1.0, (
@@ -376,6 +389,10 @@ class EvaluationConfig:
             components.append(f"spt{self.samples_per_task}")
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
+        if self.pg19_target_tokens is not None and self.dataset == "pg19":
+            components.append(f"pg19target{self.pg19_target_tokens}")
+        if self.pg19_source_dataset is not None and self.dataset == "pg19":
+            components.append(f"pg19src{self.pg19_source_dataset.replace('/', '--')}")
 
         dir_name = _compact_dir_name(components)
         config_dir = output_dir / dir_name
@@ -648,6 +665,50 @@ class EvaluationRunner:
         data_dir = str(self.config.data_dir) if self.config.data_dir else None
         fraction = self.config.fraction
 
+        if dataset_name == "pg19":
+            source_dataset = self.config.pg19_source_dataset or DEFAULT_PG19_DATASET_ID
+            logger.info(
+                "Loading PG19 source dataset: %s (official benchmark=%s)",
+                source_dataset,
+                DATASET_REGISTRY[dataset_name],
+            )
+            df = load_pg19_source_dataframe(dataset_id=source_dataset, split="test")
+
+            if fraction < 1.0:
+                original_len = len(df)
+                sample_n = max(1, int(round(original_len * fraction)))
+                sample_n = min(sample_n, original_len)
+                df = df.sample(n=sample_n, random_state=self.config.seed)
+                logger.info(
+                    "Sampled %s books (%.2f) from original %s books for PG19.",
+                    len(df),
+                    fraction,
+                    original_len,
+                )
+
+            max_context_tokens = self.config.max_context_length or 4096
+            target_tokens = self.config.pg19_target_tokens or 256
+            prepared_df = build_pg19_evaluation_dataframe(
+                source_df=df.reset_index(drop=True),
+                tokenizer=self.pipeline.tokenizer,
+                max_context_tokens=max_context_tokens,
+                target_tokens=target_tokens,
+            )
+            if prepared_df.empty:
+                raise ValueError(
+                    "PG19 preparation produced no usable samples. "
+                    "Check max_context_length / pg19_target_tokens and source dataset availability."
+                )
+            self.df = prepared_df
+            logger.info(
+                "Prepared PG19 evaluation dataframe with %s books "
+                "(max_context_tokens=%s, target_tokens=%s).",
+                len(self.df),
+                max_context_tokens,
+                target_tokens,
+            )
+            return
+
         logger.info(
             f"Loading dataset: {DATASET_REGISTRY[dataset_name]} (data_dir: {data_dir})"
         )
@@ -778,10 +839,82 @@ class EvaluationRunner:
         logger.info("Model pipeline loaded.")
 
     @torch.inference_mode()
+    def _run_pg19_perplexity(self):
+        """
+        Executes PG19 continuation likelihood evaluation with optional prefill compression.
+        """
+        assert self.df is not None
+
+        self.df["target_nll"] = None  # type: ignore[index]
+        self.df["compression_ratio"] = None  # type: ignore[index]
+
+        perform_prefill_compression = self.press is not None and not isinstance(self.press, DecodingPress)
+        logger.info("Starting PG19 continuation perplexity evaluation...")
+
+        for index, row in tqdm(
+            self.df.iterrows(), total=len(self.df), desc="Running PG19 Perplexity"
+        ):
+            context_ids = torch.tensor(
+                [row["context_ids"]],
+                dtype=torch.long,
+                device=self.pipeline.model.device,
+            )
+            target_ids = torch.tensor(
+                [row["target_ids"]],
+                dtype=torch.long,
+                device=self.pipeline.model.device,
+            )
+            context_length = context_ids.shape[1]
+            cache = DynamicCache()
+
+            with self.press(self.pipeline.model) if perform_prefill_compression else contextlib.nullcontext():
+                context_outputs = self.pipeline.model(
+                    input_ids=context_ids,
+                    past_key_values=cache,
+                    num_logits_to_keep=1,
+                )
+
+            total_nll = F.cross_entropy(
+                context_outputs.logits[:, -1, :],
+                target_ids[:, 0],
+                reduction="sum",
+            )
+
+            if target_ids.shape[1] > 1:
+                position_ids = torch.arange(
+                    context_length,
+                    context_length + target_ids.shape[1] - 1,
+                    device=self.pipeline.model.device,
+                ).unsqueeze(0)
+                continuation_outputs = self.pipeline.model(
+                    input_ids=target_ids[:, :-1],
+                    past_key_values=cache,
+                    position_ids=position_ids,
+                )
+                total_nll = total_nll + F.cross_entropy(
+                    continuation_outputs.logits.reshape(-1, continuation_outputs.logits.shape[-1]),
+                    target_ids[:, 1:].reshape(-1),
+                    reduction="sum",
+                )
+
+            self.df.loc[index, "target_nll"] = float(total_nll.item())  # type: ignore[index]
+            self.df.loc[index, "compression_ratio"] = (
+                self.press.compression_ratio if self.press is not None else 0.0  # type: ignore[attr-defined]
+            )  # type: ignore[index]
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+        logger.info("PG19 continuation perplexity evaluation completed.")
+
+    @torch.inference_mode()
     def _run_inference(self):
         """
         Executes the inference process on the prepared dataset using the model pipeline.
         """
+        if self.config.dataset == "pg19":
+            self._run_pg19_perplexity()
+            return
 
         self.df["predicted_answer"] = None  # type: ignore[index]
 
