@@ -10,15 +10,17 @@ SUMMARY_MODES = {
     "norm_topk_mean_only",
     "mean_plus_norm_topk_mean",
     "multi_rep_max",
+    "adaptive_fusion_v1",
 }
 
 REPRESENTATIVE_MODES = {
     "key_norm",
+    "key_norm_diverse",
     "tail_query_relevance",
     "random_topk",
 }
 
-QUERY_AGG_MODES = {"mean", "max", "topr_mean"}
+QUERY_AGG_MODES = {"mean", "max", "topr_mean", "adaptive_mean_max_v1"}
 HEAD_AGG_MODES = {"uniform_mean", "strength_weighted", "top_head_only"}
 
 
@@ -36,6 +38,13 @@ def aggregate_query_scores(
     if mode == "topr_mean":
         actual_topr = max(1, min(topr, scores.shape[-2]))
         return scores.topk(actual_topr, dim=-2).values.mean(dim=-2)
+    if mode == "adaptive_mean_max_v1":
+        mean_scores = scores.mean(dim=-2)
+        max_scores = scores.max(dim=-2).values
+        score_range = max_scores - scores.min(dim=-2).values
+        score_mean_abs = scores.abs().mean(dim=-2).clamp_min(1e-6)
+        gate = (score_range / score_mean_abs).sigmoid()
+        return gate * max_scores + (1.0 - gate) * mean_scores
     raise ValueError(f"Unsupported query aggregation mode: {mode}")
 
 
@@ -90,6 +99,28 @@ def select_representative_indices(
 
     if mode == "key_norm":
         selector_scores = block_keys.norm(dim=-1)
+        return selector_scores.topk(actual_topk, dim=-1).indices
+    if mode == "key_norm_diverse":
+        selector_scores = block_keys.norm(dim=-1)
+        sorted_indices = selector_scores.argsort(dim=-1, descending=True)
+        selected = []
+        for rank in range(sorted_indices.shape[-1]):
+            candidate = sorted_indices[..., rank]
+            if not selected:
+                selected.append(candidate)
+            else:
+                stacked = torch.stack(selected, dim=-1)
+                min_distance = (candidate[..., None] - stacked).abs().amin(dim=-1)
+                distance_threshold = max(1, math.ceil(block_len / max(actual_topk, 1)) - 1)
+                accept = min_distance >= distance_threshold
+                fallback_accept = len(selected) + (sorted_indices.shape[-1] - rank) <= actual_topk
+                if bool(accept.all()) or fallback_accept:
+                    selected.append(candidate)
+            if len(selected) >= actual_topk:
+                break
+        while len(selected) < actual_topk:
+            selected.append(sorted_indices[..., len(selected)])
+        return torch.stack(selected, dim=-1)
     elif mode == "tail_query_relevance":
         if tail_query_states is None or tail_query_states.shape[-2] == 0:
             selector_scores = block_keys.norm(dim=-1)

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from typing import Iterable
 
 import pandas as pd
@@ -29,6 +30,10 @@ def load_pg19_source_dataframe(dataset_id: str = DEFAULT_PG19_DATASET_ID, split:
             return dataset.to_pandas()
         except Exception as exc:  # pragma: no cover - network dependent
             last_error = exc
+    fallback_dataset_id = os.environ.get("PG19_FALLBACK_SOURCE_DATASET")
+    if fallback_dataset_id and fallback_dataset_id != dataset_id:
+        dataset = load_dataset(fallback_dataset_id, split=split, trust_remote_code=False)
+        return dataset.to_pandas()
     raise RuntimeError(
         f"Failed to load PG19 source dataset '{dataset_id}' after 3 attempts. "
         "The official builder downloads external book assets and may fail under unstable network conditions."

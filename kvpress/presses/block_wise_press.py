@@ -284,6 +284,38 @@ class BlockWisePress(BasePress):
                 mode=self.query_agg_mode,
                 topr=resolve_query_topr(query_states.shape[-2], self.query_topr),
             )
+        if self.summary_mode == "adaptive_fusion_v1":
+            rep_scores = torch.einsum(
+                "bhqd,bhkrd->bhqkr",
+                query_states,
+                summary["multi_rep_keys"],
+            ) / math.sqrt(query_states.shape[-1])
+            rep_scores = rep_scores.max(dim=-1).values
+            rep_scores = aggregate_query_scores(
+                rep_scores,
+                mode=self.query_agg_mode,
+                topr=resolve_query_topr(query_states.shape[-2], self.query_topr),
+            )
+
+            token_counts = summary["token_counts"].to(query_states.dtype)[:, None, :]
+            mean_norm = summary["mean_keys"].norm(dim=-1)
+            topk_norm = summary["topk_key_means"].norm(dim=-1)
+            rep_norms = summary["multi_rep_keys"].norm(dim=-1)
+
+            concentration = (topk_norm / mean_norm.clamp_min(self.eps)).clamp(0.0, 4.0)
+            norm_var = rep_norms.var(dim=-1, unbiased=False)
+            rep_center = rep_norms.mean(dim=-1, keepdim=True)
+            rep_dispersion = ((rep_norms - rep_center) ** 2).mean(dim=-1)
+
+            topk_weight = (concentration - 1.0).clamp_min(0.0)
+            rep_weight = (rep_dispersion + norm_var).sqrt()
+            mean_weight = token_counts.reciprocal().sqrt().expand_as(topk_weight)
+
+            weights = torch.stack([mean_weight, topk_weight, rep_weight], dim=-1)
+            weights = weights / weights.sum(dim=-1, keepdim=True).clamp_min(self.eps)
+
+            stacked_scores = torch.stack([mean_scores, topk_scores, rep_scores], dim=-1)
+            return (stacked_scores * weights).sum(dim=-1)
         raise ValueError(f"Unsupported summary_mode: {self.summary_mode}")
 
     def analyze_blocks(
