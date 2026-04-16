@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 from collections import defaultdict
 from dataclasses import dataclass, field
 import math
@@ -14,241 +16,114 @@ from kvpress.presses.base_press import BasePress
 from kvpress.presses.block_wise_press import BlockWisePress
 from kvpress.utils import extract_keys_and_values
 
+
+DecodeMode = Literal["permanent_fixed_budget", "compute_cold_fixed_budget"]
 PhaseName = Literal["prefill", "decode"]
 
 
 @dataclass
 class DualPhasePerLayerPress(BasePress):
     """
-    Layer-aware / phase-aware block policy on top of BlockWisePress.
+    Two-phase block policy for the current long-output decode experiments.
 
-    Decode uses two levels of approximation:
-    - full refresh only every `score_refresh_interval` steps
-    - block heat EMA reused between refreshes
+    The press intentionally keeps a small surface area:
+    - prefill is always physical BlockWise compression
+    - decode is either fixed-budget permanent eviction or fixed-budget compute-cold masking
+    - decode budget is anchored to the number of blocks kept after prefill
 
-    The press also emits logical block states for a future offload system.
+    Older experimental paths such as per-layer ratio tables, score reuse, and
+    offload/prefetch state simulation are intentionally not implemented here.
     """
 
     prefill_press: BlockWisePress
     decode_press: BlockWisePress
-
-    layer_phase_ratios: dict[int, list[float]] = field(default_factory=dict)
-    default_phase_ratios: list[float] = field(default_factory=lambda: [0.0, 0.0])
-    layer_phase_cold_ratios: dict[int, list[float]] = field(default_factory=dict)
-    default_phase_cold_ratios: list[float] = field(default_factory=lambda: [0.0, 0.0])
-
-    prefill_layer_presses: dict[int, BlockWisePress] = field(default_factory=dict)
-    decode_layer_presses: dict[int, BlockWisePress] = field(default_factory=dict)
-
+    decode_mode: DecodeMode = "compute_cold_fixed_budget"
     block_size: int = 16
-    compression_interval: int = 1
-    score_refresh_interval: int = 4
-    decode_hidden_states_buffer_size: int = 32
-    score_reuse_mode: Literal["none", "step", "layer"] = "none"
-    score_reuse_weight: float = 0.2
-    history_momentum: float = 0.8
-    resident_gpu_ratio: float = 0.5
-    prefetch_ratio: float = 0.5
+    compression_interval: int = 16
+    decode_hidden_states_buffer_size: int = 16
+    decode_block_budget: int | None = None
+    decode_cold_block_budget: int | None = None
+    decode_budget_scale: float = 1.0
+    decode_cold_budget_scale: float = 1.0
     require_question_aware: bool = True
+
+    layer_decode_steps: dict[int, int] = field(default_factory=lambda: defaultdict(int), init=False, repr=False)
+    decode_hidden_states_buffer: dict[int, list[torch.Tensor]] = field(
+        default_factory=lambda: defaultdict(list),
+        init=False,
+        repr=False,
+    )
+    layer_prefill_kept_blocks: dict[int, int] = field(default_factory=dict, init=False, repr=False)
+    layer_cached_masks: dict[int, tuple[torch.Tensor, torch.Tensor, torch.Tensor] | None] = field(
+        default_factory=lambda: defaultdict(lambda: None),
+        init=False,
+        repr=False,
+    )
+    layer_block_states: dict[int, dict[str, torch.Tensor | int | str]] = field(
+        default_factory=lambda: defaultdict(dict),
+        init=False,
+        repr=False,
+    )
 
     @property
     def compression_ratio(self) -> float:
-        return float(self.default_phase_ratios[0])
+        return float(self.prefill_press.compression_ratio)
 
     @compression_ratio.setter
     def compression_ratio(self, value: float):
         ratio = float(value)
         assert 0 <= ratio < 1, "compression_ratio must be in [0, 1)"
-        self.default_phase_ratios = [ratio, ratio]
+        self.prefill_press.compression_ratio = ratio
 
     def __post_init__(self):
+        assert self.decode_mode in {"permanent_fixed_budget", "compute_cold_fixed_budget"}
+        assert self.block_size > 0, "block_size must be > 0"
         assert self.compression_interval > 0, "compression_interval must be > 0"
-        assert self.score_refresh_interval > 0, "score_refresh_interval must be > 0"
-        assert len(self.default_phase_ratios) == 2, "default_phase_ratios must be [prefill_ratio, decode_ratio]"
-        assert len(self.default_phase_cold_ratios) == 2, "default_phase_cold_ratios must be [prefill_cold, decode_cold]"
         assert self.decode_hidden_states_buffer_size > 0, "decode_hidden_states_buffer_size must be > 0"
-        assert self.score_reuse_mode in {"none", "step", "layer"}, (
-            "score_reuse_mode must be one of {'none', 'step', 'layer'}"
-        )
-        assert 0 <= self.score_reuse_weight <= 1, "score_reuse_weight must be in [0, 1]"
-        assert 0 <= self.history_momentum < 1, "history_momentum must be in [0, 1)"
-        assert 0 <= self.resident_gpu_ratio <= 1, "resident_gpu_ratio must be in [0, 1]"
-        assert 0 <= self.prefetch_ratio <= 1, "prefetch_ratio must be in [0, 1]"
+        assert self.decode_block_budget is None or self.decode_block_budget >= 0
+        assert self.decode_cold_block_budget is None or self.decode_cold_block_budget >= 0
+        assert self.decode_budget_scale >= 0, "decode_budget_scale must be >= 0"
+        assert self.decode_cold_budget_scale >= 0, "decode_cold_budget_scale must be >= 0"
         assert isinstance(self.prefill_press, BlockWisePress), "prefill_press must be BlockWisePress"
         assert isinstance(self.decode_press, BlockWisePress), "decode_press must be BlockWisePress"
-
-        self.layer_decode_steps = defaultdict(int)
-        self.layer_score_steps = defaultdict(int)
-        self.layer_decode_generated_tokens = defaultdict(int)
-        self.decode_hidden_states_buffer = defaultdict(list)
-        self.layer_block_states = defaultdict(dict)
-        self.layer_cached_masks = defaultdict(lambda: None)
-        self.layer_heat_ema = defaultdict(lambda: None)
-        self.layer_score_reuse_cache = defaultdict(lambda: None)
+        self._sync_blockwise_presses()
 
     @classmethod
     def init_class_vars(
         cls,
-        layer_phase_ratios: dict[int, list[float]],
+        layer_phase_ratios: Optional[dict[int, list[float]]] = None,
         block_size: int = 16,
         default_phase_ratios: Optional[list[float]] = None,
-        compression_interval: int = 1,
-        prefill_layer_presses: Optional[dict[int, BlockWisePress]] = None,
-        decode_layer_presses: Optional[dict[int, BlockWisePress]] = None,
-        layer_phase_cold_ratios: Optional[dict[int, list[float]]] = None,
-        default_phase_cold_ratios: Optional[list[float]] = None,
-        decode_hidden_states_buffer_size: int = 32,
-        score_refresh_interval: int = 4,
+        compression_interval: int = 16,
+        decode_hidden_states_buffer_size: int = 16,
+        **_: object,
     ) -> "DualPhasePerLayerPress":
-        if default_phase_ratios is None:
-            default_phase_ratios = [0.0, 0.0]
-        if default_phase_cold_ratios is None:
-            default_phase_cold_ratios = [0.0, 0.0]
-
-        prefill_press = BlockWisePress(compression_ratio=default_phase_ratios[0], block_size=block_size)
-        decode_press = BlockWisePress(compression_ratio=default_phase_ratios[1], block_size=block_size)
-
+        del layer_phase_ratios
+        prefill_ratio = default_phase_ratios[0] if default_phase_ratios else 0.0
+        prefill_press = BlockWisePress(compression_ratio=prefill_ratio, block_size=block_size, q_window_size=block_size)
+        decode_press = BlockWisePress(compression_ratio=0.0, block_size=block_size, q_window_size=block_size)
         return cls(
             prefill_press=prefill_press,
             decode_press=decode_press,
-            layer_phase_ratios=layer_phase_ratios,
-            default_phase_ratios=default_phase_ratios,
-            layer_phase_cold_ratios=dict(layer_phase_cold_ratios or {}),
-            default_phase_cold_ratios=default_phase_cold_ratios,
-            prefill_layer_presses=dict(prefill_layer_presses or {}),
-            decode_layer_presses=dict(decode_layer_presses or {}),
             block_size=block_size,
             compression_interval=compression_interval,
-            score_refresh_interval=score_refresh_interval,
             decode_hidden_states_buffer_size=decode_hidden_states_buffer_size,
         )
 
     def post_init_from_model(self, model):
-        seen = set()
-        all_presses = [self.prefill_press, self.decode_press]
-        all_presses.extend(self.prefill_layer_presses.values())
-        all_presses.extend(self.decode_layer_presses.values())
+        self.prefill_press.post_init_from_model(model)
+        if id(self.decode_press) != id(self.prefill_press):
+            self.decode_press.post_init_from_model(model)
 
-        for press in all_presses:
-            if id(press) in seen:
-                continue
-            press.post_init_from_model(model)
-            seen.add(id(press))
-
-    def compress(
-        self,
-        module: nn.Module,
-        hidden_states: torch.Tensor,
-        keys: torch.Tensor,
-        values: torch.Tensor,
-        attentions: torch.Tensor | None,
-        kwargs: dict,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        phase = self._resolve_phase(hidden_states, kwargs)
-        layer_idx = self._resolve_layer_idx(module)
-        active_press = self._resolve_active_press(layer_idx, phase)
-        ratio = self._resolve_ratio(layer_idx, phase)
-        cold_ratio = self._resolve_cold_ratio(layer_idx, phase)
-
-        force_refresh_summary = bool(kwargs.get("_force_refresh_summary", False))
-
-        if phase == "prefill":
-            if ratio == 0.0 and cold_ratio > 0.0:
-                score_reuse_hint = self._resolve_score_reuse_hint(layer_idx, phase)
-                retained_plan = active_press.build_block_plan(
-                    module,
-                    hidden_states,
-                    keys,
-                    values,
-                    attentions,
-                    kwargs,
-                    compression_ratio=cold_ratio,
-                    force_refresh_summary=force_refresh_summary,
-                    score_reuse_hint=score_reuse_hint,
-                    score_reuse_weight=self.score_reuse_weight,
-                )
-                active_block_indices = retained_plan["kept_block_indices"]
-                deleted_block_indices = torch.empty(
-                    keys.shape[0],
-                    0,
-                    dtype=torch.long,
-                    device=keys.device,
-                )
-                cached_mask = self._build_mask_from_active_blocks(
-                    keys,
-                    active_press.block_size,
-                    active_block_indices,
-                )
-                self.layer_cached_masks[layer_idx] = cached_mask
-                module.masked_key_indices = cached_mask
-                self._update_score_reuse_cache(layer_idx, retained_plan["block_scores"])
-                self._record_block_states(
-                    layer_idx,
-                    retained_plan["num_blocks"],
-                    retained_plan["block_scores"],
-                    active_block_indices,
-                    deleted_block_indices,
-                )
-                active_press.build_or_refresh_block_summary(module, keys, values, force_refresh=True)
-                return keys, values
-
-            original_ratio = active_press.compression_ratio
-            active_press.compression_ratio = ratio
-            try:
-                keys, values = active_press.compress(module, hidden_states, keys, values, attentions, kwargs)
-                latest_heat = active_press.last_block_heat.get(layer_idx)
-                self._update_score_reuse_cache(layer_idx, latest_heat)
-                self._record_block_states(layer_idx, 0, latest_heat, torch.empty(1, 0, dtype=torch.long, device=keys.device), torch.empty(1, 0, dtype=torch.long, device=keys.device))
-                return keys, values
-            finally:
-                active_press.compression_ratio = original_ratio
-
-        score_reuse_hint = self._resolve_score_reuse_hint(layer_idx, phase)
-        plan = active_press.build_block_plan(
-            module,
-            hidden_states,
-            keys,
-            values,
-            attentions,
-            kwargs,
-            compression_ratio=ratio,
-            force_refresh_summary=force_refresh_summary,
-            score_reuse_hint=score_reuse_hint,
-            score_reuse_weight=self.score_reuse_weight,
-        )
-        original_num_blocks = plan["num_blocks"]
-        deleted_block_indices = self._complement_block_indices(original_num_blocks, plan["kept_block_indices"], keys.device)
-        keys, values = active_press.gather_by_token_indices(keys, values, plan["token_indices"])
-
-        retained_score_reuse_hint = self._resize_score_reuse_hint(
-            score_reuse_hint,
-            target_blocks=math.ceil(keys.shape[2] / active_press.block_size),
-        )
-        retained_plan = active_press.build_block_plan(
-            module,
-            hidden_states,
-            keys,
-            values,
-            attentions,
-            kwargs,
-            compression_ratio=cold_ratio,
-            force_refresh_summary=force_refresh_summary,
-            score_reuse_hint=retained_score_reuse_hint,
-            score_reuse_weight=self.score_reuse_weight,
-        )
-
-        active_block_indices = retained_plan["kept_block_indices"]
-        cached_mask = self._build_mask_from_active_blocks(keys, active_press.block_size, active_block_indices)
-        self.layer_cached_masks[layer_idx] = cached_mask
-        module.masked_key_indices = cached_mask
-
-        heat = retained_plan["block_scores"]
-        self._update_score_reuse_cache(layer_idx, heat)
-        self._record_block_states(layer_idx, retained_plan["num_blocks"], heat, active_block_indices, deleted_block_indices)
-        active_press.build_or_refresh_block_summary(module, keys, values, force_refresh=True)
-        return keys, values
+    def reset(self):
+        self.layer_decode_steps = defaultdict(int)
+        self.decode_hidden_states_buffer = defaultdict(list)
+        self.layer_prefill_kept_blocks = {}
+        self.layer_cached_masks = defaultdict(lambda: None)
+        self.layer_block_states = defaultdict(dict)
 
     def forward_hook(self, module: nn.Module, input: list[torch.Tensor], kwargs: dict, output: list):
+        del input
         hidden_states = kwargs["hidden_states"]
         cache = kwargs["past_key_values"]
         layer_idx = self._resolve_layer_idx(module)
@@ -258,269 +133,247 @@ class DualPhasePerLayerPress(BasePress):
             module.masked_key_indices = None
             keys, values = extract_keys_and_values(cache, layer_idx)
             attentions = output[1] if len(output) > 1 and output[1] is not None else None
-            keys, values = self.compress(module, hidden_states, keys, values, attentions, kwargs)
+            keys, values = self._compress_prefill(module, hidden_states, keys, values, attentions, kwargs)
             self._write_back_cache(cache, layer_idx, keys, values)
             return output
 
-        self.decode_hidden_states_buffer[layer_idx].append(hidden_states.detach().clone())
-        self.decode_hidden_states_buffer[layer_idx] = self.decode_hidden_states_buffer[layer_idx][
-            -self.decode_hidden_states_buffer_size :
-        ]
+        self._append_decode_hidden_states(layer_idx, hidden_states)
+        self.layer_decode_steps[layer_idx] += hidden_states.shape[1]
 
-        self.layer_decode_steps[layer_idx] += 1
-        self.layer_score_steps[layer_idx] += 1
-        self.layer_decode_generated_tokens[layer_idx] += hidden_states.shape[1]
-
-        new_block_formed = self.layer_decode_generated_tokens[layer_idx] % self.block_size == 0
-
-        refresh_scores = (
-            new_block_formed
-            or self.layer_score_steps[layer_idx] >= self.score_refresh_interval
-            or not self.layer_block_states[layer_idx]
+        keys, values = extract_keys_and_values(cache, layer_idx)
+        has_decode_state = self.layer_block_states[layer_idx].get("mode") in {
+            "permanent_fixed_budget",
+            "compute_cold_fixed_budget",
+        }
+        should_refresh = (
+            self.layer_decode_steps[layer_idx] >= self.compression_interval
+            or not has_decode_state
         )
-        refresh_compression = (
-            new_block_formed
-            or self.layer_decode_steps[layer_idx] >= self.compression_interval
-            or not self.layer_block_states[layer_idx]
-        )
-
-        if not refresh_scores:
-            module.masked_key_indices = self.layer_cached_masks[layer_idx]
+        if not should_refresh:
+            module.masked_key_indices = self._validate_mask(self.layer_cached_masks[layer_idx], keys)
+            self.layer_cached_masks[layer_idx] = module.masked_key_indices
             return output
 
-        self.layer_score_steps[layer_idx] = 0
-        if refresh_compression:
-            self.layer_decode_steps[layer_idx] = 0
-
+        self.layer_decode_steps[layer_idx] = 0
         buffered_hidden_states = torch.cat(self.decode_hidden_states_buffer[layer_idx], dim=1)
-        keys, values = extract_keys_and_values(cache, layer_idx)
         attentions = output[1] if len(output) > 1 and output[1] is not None else None
 
-        if refresh_compression:
-            compression_kwargs = dict(kwargs)
-            compression_kwargs["_force_refresh_summary"] = new_block_formed
-            keys, values = self.compress(module, buffered_hidden_states, keys, values, attentions, compression_kwargs)
-            self._write_back_cache(cache, layer_idx, keys, values)
-        else:
-            active_press = self._resolve_active_press(layer_idx, "decode")
-            retained_plan = active_press.build_block_plan(
+        if self.decode_mode == "permanent_fixed_budget":
+            keys, values = self._permanent_decode_step(
                 module,
                 buffered_hidden_states,
                 keys,
                 values,
                 attentions,
                 kwargs,
-                compression_ratio=self._resolve_cold_ratio(layer_idx, "decode"),
-                force_refresh_summary=new_block_formed,
-                score_reuse_hint=self._resolve_score_reuse_hint(layer_idx, "decode"),
-                score_reuse_weight=self.score_reuse_weight,
             )
-            active_block_indices = retained_plan["kept_block_indices"]
-            self.layer_cached_masks[layer_idx] = self._build_mask_from_active_blocks(
+            self._write_back_cache(cache, layer_idx, keys, values)
+        else:
+            self._compute_cold_decode_step(
+                module,
+                buffered_hidden_states,
                 keys,
-                active_press.block_size,
-                active_block_indices,
+                values,
+                attentions,
+                kwargs,
             )
-            module.masked_key_indices = self.layer_cached_masks[layer_idx]
-            self._record_block_states(
-                layer_idx,
-                retained_plan["num_blocks"],
-                retained_plan["block_scores"],
-                active_block_indices,
-                torch.empty(keys.shape[0], 0, dtype=torch.long, device=keys.device),
-            )
-            self._update_score_reuse_cache(layer_idx, retained_plan["block_scores"])
 
         return output
 
-    def reset(self):
-        self.layer_decode_steps = defaultdict(int)
-        self.layer_score_steps = defaultdict(int)
-        self.layer_decode_generated_tokens = defaultdict(int)
-        self.decode_hidden_states_buffer = defaultdict(list)
-        self.layer_block_states = defaultdict(dict)
-        self.layer_cached_masks = defaultdict(lambda: None)
-        self.layer_heat_ema = defaultdict(lambda: None)
-        self.layer_score_reuse_cache = defaultdict(lambda: None)
-
-    def _resolve_score_reuse_hint(
+    def _compress_prefill(
         self,
-        layer_idx: int,
-        phase: PhaseName,
-    ) -> torch.Tensor | None:
-        if self.score_reuse_mode == "none":
-            return None
-        if self.score_reuse_mode == "layer":
-            if phase == "prefill":
-                return None
-            previous = self.layer_heat_ema.get(layer_idx - 1)
-            return previous.detach() if previous is not None else None
-        cached = self.layer_score_reuse_cache.get(layer_idx)
-        return cached.detach() if cached is not None else None
+        module: nn.Module,
+        hidden_states: torch.Tensor,
+        keys: torch.Tensor,
+        values: torch.Tensor,
+        attentions: torch.Tensor | None,
+        kwargs: dict,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        original_ratio = self.prefill_press.compression_ratio
+        try:
+            keys, values = self.prefill_press.compress(module, hidden_states, keys, values, attentions, kwargs)
+        finally:
+            self.prefill_press.compression_ratio = original_ratio
 
-    def _update_score_reuse_cache(
-        self,
-        layer_idx: int,
-        block_scores: torch.Tensor | None,
-    ) -> None:
-        if self.score_reuse_mode == "none" or block_scores is None:
-            return
-        self.layer_score_reuse_cache[layer_idx] = block_scores.detach()
-
-    def _resize_score_reuse_hint(
-        self,
-        score_reuse_hint: torch.Tensor | None,
-        target_blocks: int,
-    ) -> torch.Tensor | None:
-        if score_reuse_hint is None:
-            return None
-        if score_reuse_hint.shape[-1] == target_blocks:
-            return score_reuse_hint
-        if score_reuse_hint.shape[-1] < target_blocks:
-            return None
-        return score_reuse_hint[..., :target_blocks]
-
-    def _record_block_states(
-        self,
-        layer_idx: int,
-        num_blocks: int,
-        heat: torch.Tensor | None,
-        active_block_indices: torch.Tensor,
-        deleted_block_indices: torch.Tensor,
-    ):
-        if num_blocks == 0:
-            self.layer_block_states[layer_idx] = {
-                "active": active_block_indices,
-                "resident_gpu": active_block_indices,
-                "permanently_deleted": deleted_block_indices,
-                "offloaded_cpu": active_block_indices,
-                "prefetch_to_gpu": active_block_indices,
-            }
-            return
-
-        device = active_block_indices.device if active_block_indices.numel() > 0 else deleted_block_indices.device
-        all_block_indices = torch.arange(num_blocks, device=device).expand(active_block_indices.shape[0], -1)
-        inactive_block_indices = self._difference_block_indices(all_block_indices, active_block_indices)
-
-        if heat is None or heat.shape[-1] != num_blocks:
-            if layer_idx in self.layer_heat_ema and self.layer_heat_ema[layer_idx] is not None:
-                heat = self.layer_heat_ema[layer_idx]
-            else:
-                heat = torch.zeros(active_block_indices.shape[0], num_blocks, device=device)
-
-        previous = self.layer_heat_ema[layer_idx]
-        if previous is None or previous.shape != heat.shape:
-            heat_ema = heat.detach()
-        else:
-            heat_ema = self.history_momentum * previous + (1.0 - self.history_momentum) * heat.detach()
-        self.layer_heat_ema[layer_idx] = heat_ema
-
-        resident_gpu_indices, offloaded_cpu_indices, prefetch_to_gpu_indices = self._split_inactive_blocks(
-            inactive_block_indices,
-            heat_ema,
-        )
-
+        layer_idx = self._resolve_layer_idx(module)
+        kept_blocks = math.ceil(keys.shape[2] / self.block_size)
+        self.layer_prefill_kept_blocks[layer_idx] = kept_blocks
+        self.layer_cached_masks[layer_idx] = None
         self.layer_block_states[layer_idx] = {
-            "active": active_block_indices.detach().clone(),
-            "resident_gpu": resident_gpu_indices,
+            "mode": "prefill",
+            "active_blocks": kept_blocks,
+            "live_blocks": kept_blocks,
+            "deleted_blocks": 0,
+        }
+        return keys, values
+
+    def _permanent_decode_step(
+        self,
+        module: nn.Module,
+        hidden_states: torch.Tensor,
+        keys: torch.Tensor,
+        values: torch.Tensor,
+        attentions: torch.Tensor | None,
+        kwargs: dict,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        layer_idx = self._resolve_layer_idx(module)
+        keep_budget = self._resolve_decode_budget(layer_idx, keys, cold=False)
+        plan = self.decode_press.build_block_plan(
+            module,
+            hidden_states,
+            keys,
+            values,
+            attentions,
+            kwargs,
+            compression_ratio=0.0,
+            keep_budget=keep_budget,
+            force_refresh_summary=True,
+        )
+        original_num_blocks = plan["num_blocks"]
+        deleted_block_indices = self._complement_block_indices(
+            original_num_blocks,
+            plan["kept_block_indices"],
+            keys.device,
+        )
+        keys, values = self.decode_press.gather_by_token_indices(keys, values, plan["token_indices"])
+        self.decode_press.build_or_refresh_block_summary(module, keys, values, force_refresh=True)
+        module.masked_key_indices = None
+        self.layer_cached_masks[layer_idx] = None
+        self.layer_block_states[layer_idx] = {
+            "mode": "permanent_fixed_budget",
+            "active": plan["kept_block_indices"].detach().clone(),
             "permanently_deleted": deleted_block_indices.detach().clone(),
-            "offloaded_cpu": offloaded_cpu_indices,
-            "prefetch_to_gpu": prefetch_to_gpu_indices,
-            "heat": heat.detach().clone(),
-            "heat_ema": heat_ema.detach().clone(),
+            "active_blocks": int(plan["n_kept_blocks"]),
+            "live_blocks": math.ceil(keys.shape[2] / self.block_size),
+            "deleted_blocks": int(deleted_block_indices.shape[-1]),
+            "keep_budget": int(plan["keep_budget"]),
+        }
+        return keys, values
+
+    def _compute_cold_decode_step(
+        self,
+        module: nn.Module,
+        hidden_states: torch.Tensor,
+        keys: torch.Tensor,
+        values: torch.Tensor,
+        attentions: torch.Tensor | None,
+        kwargs: dict,
+    ) -> None:
+        layer_idx = self._resolve_layer_idx(module)
+        keep_budget = self._resolve_decode_budget(layer_idx, keys, cold=True)
+        plan = self.decode_press.build_block_plan(
+            module,
+            hidden_states,
+            keys,
+            values,
+            attentions,
+            kwargs,
+            compression_ratio=0.0,
+            keep_budget=keep_budget,
+            force_refresh_summary=True,
+        )
+        mask = self._build_mask_from_active_blocks(keys, self.block_size, plan["kept_block_indices"])
+        mask = self._validate_mask(mask, keys)
+        self.layer_cached_masks[layer_idx] = mask
+        module.masked_key_indices = mask
+        self.layer_block_states[layer_idx] = {
+            "mode": "compute_cold_fixed_budget",
+            "active": plan["kept_block_indices"].detach().clone(),
+            "active_blocks": int(plan["n_kept_blocks"]),
+            "live_blocks": math.ceil(keys.shape[2] / self.block_size),
+            "masked_tokens": 0 if mask is None else int(mask[0].numel()),
+            "keep_budget": int(plan["keep_budget"]),
         }
 
-    def _split_inactive_blocks(
-        self,
-        inactive_block_indices: torch.Tensor,
-        heat_ema: torch.Tensor,
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        resident_lists = []
-        offload_lists = []
-        prefetch_lists = []
+    def _resolve_decode_budget(self, layer_idx: int, keys: torch.Tensor, cold: bool) -> int:
+        num_blocks = math.ceil(keys.shape[2] / self.block_size)
+        explicit_budget = self.decode_cold_block_budget if cold else self.decode_block_budget
+        if explicit_budget is not None:
+            base_budget = explicit_budget
+        else:
+            prefill_budget = self.layer_prefill_kept_blocks.get(layer_idx, num_blocks)
+            scale = self.decode_cold_budget_scale if cold else self.decode_budget_scale
+            base_budget = int(math.ceil(prefill_budget * scale))
+        # The recent decode tail is protected on top of the historical budget.
+        total_budget = base_budget + self.decode_press.protected_recent_blocks
+        return min(num_blocks, max(0, total_budget))
 
-        for batch_idx in range(inactive_block_indices.shape[0]):
-            batch_inactive = inactive_block_indices[batch_idx]
-            if batch_inactive.numel() == 0:
-                resident_lists.append(batch_inactive)
-                offload_lists.append(batch_inactive)
-                prefetch_lists.append(batch_inactive)
-                continue
+    def _append_decode_hidden_states(self, layer_idx: int, hidden_states: torch.Tensor) -> None:
+        self.decode_hidden_states_buffer[layer_idx].append(hidden_states.detach().clone())
+        self.decode_hidden_states_buffer[layer_idx] = self.decode_hidden_states_buffer[layer_idx][
+            -self.decode_hidden_states_buffer_size :
+        ]
 
-            batch_heat = heat_ema[batch_idx, batch_inactive]
-            sorted_order = batch_heat.argsort(descending=True)
-            sorted_blocks = batch_inactive[sorted_order]
+    def _sync_blockwise_presses(self) -> None:
+        self.prefill_press.block_size = self.block_size
+        self.decode_press.block_size = self.block_size
+        self.decode_press.q_window_size = self.block_size
 
-            resident_count = int(math.ceil(sorted_blocks.numel() * self.resident_gpu_ratio))
-            resident_blocks = sorted_blocks[:resident_count]
-            remaining_blocks = sorted_blocks[resident_count:]
+    def _resolve_phase(self, hidden_states: torch.Tensor, kwargs: dict) -> PhaseName:
+        q_len = hidden_states.shape[1]
+        return "prefill" if kwargs["cache_position"][-1] <= q_len else "decode"
 
-            prefetch_count = int(math.ceil(remaining_blocks.numel() * self.prefetch_ratio)) if remaining_blocks.numel() > 0 else 0
-            prefetch_blocks = remaining_blocks[:prefetch_count]
-            offloaded_blocks = remaining_blocks[prefetch_count:]
-
-            resident_lists.append(resident_blocks.sort().values)
-            offload_lists.append(offloaded_blocks.sort().values)
-            prefetch_lists.append(prefetch_blocks.sort().values)
-
-        return (
-            self._stack_or_empty(resident_lists, inactive_block_indices.device),
-            self._stack_or_empty(offload_lists, inactive_block_indices.device),
-            self._stack_or_empty(prefetch_lists, inactive_block_indices.device),
-        )
+    def _resolve_layer_idx(self, module: nn.Module) -> int:
+        raw = getattr(module, "layer_idx")
+        if isinstance(raw, torch.Tensor):
+            return int(raw.item())
+        return int(raw)
 
     def _build_mask_from_active_blocks(
         self,
         keys: torch.Tensor,
         block_size: int,
         active_block_indices: torch.Tensor,
-    ):
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor] | None:
         num_blocks = math.ceil(keys.shape[2] / block_size)
-        active_mask = torch.zeros(keys.shape[0], num_blocks, dtype=torch.bool, device=keys.device)
-        if active_block_indices.numel() > 0:
-            active_mask.scatter_(1, active_block_indices, True)
-
-        batch_indices = []
-        head_indices = []
-        seq_indices = []
-
-        for batch_idx in range(keys.shape[0]):
-            for block_idx in range(num_blocks):
-                if active_mask[batch_idx, block_idx]:
-                    continue
-                start = block_idx * block_size
-                end = min(start + block_size, keys.shape[2])
-                for token_idx in range(start, end):
-                    for head_idx in range(keys.shape[1]):
-                        batch_indices.append(batch_idx)
-                        head_indices.append(head_idx)
-                        seq_indices.append(token_idx)
-
-        if not batch_indices:
+        if num_blocks == 0:
             return None
 
-        return (
-            torch.tensor(batch_indices, dtype=torch.long, device=keys.device),
-            torch.tensor(head_indices, dtype=torch.long, device=keys.device),
-            torch.tensor(seq_indices, dtype=torch.long, device=keys.device),
-        )
+        active_mask = torch.zeros(keys.shape[0], num_blocks, dtype=torch.bool, device=keys.device)
+        if active_block_indices.numel() > 0:
+            valid_blocks = active_block_indices.clamp(min=0, max=max(num_blocks - 1, 0))
+            active_mask.scatter_(1, valid_blocks, True)
 
-    def _difference_block_indices(self, universe: torch.Tensor, selected: torch.Tensor) -> torch.Tensor:
-        diff_lists = []
-        for batch_idx in range(universe.shape[0]):
-            if selected.shape[1] == 0:
-                diff_lists.append(universe[batch_idx])
-                continue
-            mask = torch.ones(universe.shape[1], dtype=torch.bool, device=universe.device)
-            mask[selected[batch_idx]] = False
-            diff_lists.append(universe[batch_idx][mask])
-        return self._stack_or_empty(diff_lists, universe.device)
+        token_blocks = torch.arange(keys.shape[2], device=keys.device) // block_size
+        inactive_tokens = ~active_mask[:, token_blocks]
+        inactive_tokens = inactive_tokens[:, None, :].expand(-1, keys.shape[1], -1)
+        batch_indices, head_indices, seq_indices = inactive_tokens.nonzero(as_tuple=True)
+        if batch_indices.numel() == 0:
+            return None
+        return batch_indices, head_indices, seq_indices
+
+    def _validate_mask(self, mask, keys: torch.Tensor):
+        if mask is None:
+            return None
+        batch_indices, head_indices, seq_indices = mask
+        valid_indices = (
+            (batch_indices >= 0)
+            & (batch_indices < keys.shape[0])
+            & (head_indices >= 0)
+            & (head_indices < keys.shape[1])
+            & (seq_indices >= 0)
+            & (seq_indices < keys.shape[2])
+        )
+        if bool(valid_indices.all()):
+            return mask
+        batch_indices = batch_indices[valid_indices]
+        head_indices = head_indices[valid_indices]
+        seq_indices = seq_indices[valid_indices]
+        if batch_indices.numel() == 0:
+            return None
+        return batch_indices, head_indices, seq_indices
 
     def _complement_block_indices(self, num_blocks: int, kept: torch.Tensor, device: torch.device) -> torch.Tensor:
         if num_blocks == 0:
             return torch.empty(kept.shape[0], 0, dtype=torch.long, device=device)
         universe = torch.arange(num_blocks, device=device).expand(kept.shape[0], -1)
-        return self._difference_block_indices(universe, kept)
+        diff_lists = []
+        for batch_idx in range(universe.shape[0]):
+            mask = torch.ones(num_blocks, dtype=torch.bool, device=device)
+            if kept.shape[1] > 0:
+                mask[kept[batch_idx]] = False
+            diff_lists.append(universe[batch_idx][mask])
+        return self._stack_or_empty(diff_lists, device)
 
     def _stack_or_empty(self, tensors: list[torch.Tensor], device: torch.device) -> torch.Tensor:
         if not tensors:
@@ -532,12 +385,12 @@ class DualPhasePerLayerPress(BasePress):
         for tensor in tensors:
             if tensor.numel() == max_len:
                 padded.append(tensor)
-            else:
-                pad = torch.full((max_len - tensor.numel(),), -1, dtype=torch.long, device=device)
-                padded.append(torch.cat([tensor, pad], dim=0))
+                continue
+            pad = torch.full((max_len - tensor.numel(),), -1, dtype=torch.long, device=device)
+            padded.append(torch.cat([tensor, pad], dim=0))
         return torch.stack(padded, dim=0)
 
-    def _write_back_cache(self, cache, layer_idx: int, keys: torch.Tensor, values: torch.Tensor):
+    def _write_back_cache(self, cache, layer_idx: int, keys: torch.Tensor, values: torch.Tensor) -> None:
         cache_layer = cache.layers[layer_idx]
         if isinstance(cache, QuantizedCache):
             cache_layer._quantized_keys = cache_layer._quantize(keys, axis=cache_layer.axis_key)
@@ -548,32 +401,3 @@ class DualPhasePerLayerPress(BasePress):
         else:
             cache_layer.keys = keys
             cache_layer.values = values
-
-    def _resolve_phase(self, hidden_states: torch.Tensor, kwargs: dict) -> PhaseName:
-        q_len = hidden_states.shape[1]
-        return "prefill" if kwargs["cache_position"][-1] <= q_len else "decode"
-
-    def _resolve_active_press(self, layer_idx: int, phase: PhaseName) -> BlockWisePress:
-        if phase == "prefill":
-            return self.prefill_layer_presses.get(layer_idx, self.prefill_press)
-        return self.decode_layer_presses.get(layer_idx, self.decode_press)
-
-    def _resolve_layer_idx(self, module: nn.Module) -> int:
-        raw = getattr(module, "layer_idx")
-        if isinstance(raw, torch.Tensor):
-            return int(raw.item())
-        return int(raw)
-
-    def _resolve_ratio(self, layer_idx: int, phase: PhaseName) -> float:
-        ratios = self.layer_phase_ratios.get(layer_idx, self.default_phase_ratios)
-        assert len(ratios) == 2, f"layer_phase_ratios[{layer_idx}] must be [prefill_ratio, decode_ratio]"
-        ratio = ratios[0] if phase == "prefill" else ratios[1]
-        assert 0 <= ratio < 1, f"compression ratio for layer {layer_idx} in phase {phase} must be in [0, 1)"
-        return ratio
-
-    def _resolve_cold_ratio(self, layer_idx: int, phase: PhaseName) -> float:
-        cold_ratios = self.layer_phase_cold_ratios.get(layer_idx, self.default_phase_cold_ratios)
-        assert len(cold_ratios) == 2, f"layer_phase_cold_ratios[{layer_idx}] must be [prefill_cold, decode_cold]"
-        ratio = cold_ratios[0] if phase == "prefill" else cold_ratios[1]
-        assert 0 <= ratio < 1, f"cold ratio for layer {layer_idx} in phase {phase} must be in [0, 1)"
-        return ratio

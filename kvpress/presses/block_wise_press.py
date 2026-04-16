@@ -400,6 +400,7 @@ class BlockWisePress(BasePress):
         attentions: torch.Tensor | None,
         kwargs: dict,
         compression_ratio: float | None = None,
+        keep_budget: int | None = None,
         force_refresh_summary: bool = False,
         score_reuse_hint: torch.Tensor | None = None,
         score_reuse_weight: float = 0.0,
@@ -427,13 +428,16 @@ class BlockWisePress(BasePress):
         num_blocks = analysis["block_scores"].shape[-1]
         ratio = self.compression_ratio if compression_ratio is None else compression_ratio
 
-        keep_budget = min(num_blocks, max(0, int(math.ceil(num_blocks * (1.0 - ratio)))))
+        if keep_budget is None:
+            effective_keep_budget = min(num_blocks, max(0, int(math.ceil(num_blocks * (1.0 - ratio)))))
+        else:
+            effective_keep_budget = min(num_blocks, max(0, int(keep_budget)))
         has_partial_tail_block = key_len % self.block_size != 0
         tail_block_idx = num_blocks - 1
 
-        if keep_budget == 0:
+        if effective_keep_budget == 0:
             kept_block_indices = torch.empty(keys.shape[0], 0, dtype=torch.long, device=keys.device)
-        elif keep_budget >= num_blocks:
+        elif effective_keep_budget >= num_blocks:
             kept_block_indices = torch.arange(num_blocks, device=keys.device).expand(keys.shape[0], -1)
         else:
             sink_count = min(self.prefix_sink_blocks, num_blocks)
@@ -443,9 +447,9 @@ class BlockWisePress(BasePress):
             protected_tail_indices = {tail_block_idx} if has_partial_tail_block and num_blocks > 0 else set()
             protected_indices = protected_sink_indices | protected_recent_indices | protected_tail_indices
 
-            if len(protected_indices) <= keep_budget:
+            if len(protected_indices) <= effective_keep_budget:
                 remaining_candidates = [idx for idx in range(num_blocks) if idx not in protected_indices]
-                additional_keeps = keep_budget - len(protected_indices)
+                additional_keeps = effective_keep_budget - len(protected_indices)
                 selected_remaining = self._select_top_block_indices(
                     analysis["block_scores"], remaining_candidates, additional_keeps, keys.device
                 )
@@ -461,7 +465,7 @@ class BlockWisePress(BasePress):
                     "Falling back to score-based selection over all blocks."
                 )
                 kept_block_indices = self._select_top_block_indices(
-                    analysis["block_scores"], list(range(num_blocks)), keep_budget, keys.device
+                    analysis["block_scores"], list(range(num_blocks)), effective_keep_budget, keys.device
                 ).sort(dim=-1).values
 
         token_indices = self.expand_blocks_to_token_indices(
@@ -471,7 +475,7 @@ class BlockWisePress(BasePress):
             {
                 "num_blocks": num_blocks,
                 "n_kept_blocks": kept_block_indices.shape[-1],
-                "keep_budget": keep_budget,
+                "keep_budget": effective_keep_budget,
                 "kept_block_indices": kept_block_indices,
                 "token_indices": token_indices,
             }

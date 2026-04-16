@@ -204,6 +204,9 @@ class EvaluationConfig:
     prefill_skip_first_layers: Optional[int] = None
     task_filter: Optional[str] = None
     samples_per_task: Optional[int] = None
+    min_answer_tokens: Optional[int] = None
+    min_context_tokens: Optional[int] = None
+    max_filtered_samples: Optional[int] = None
     pg19_target_tokens: Optional[int] = None
     pg19_source_dataset: Optional[str] = None
 
@@ -218,6 +221,11 @@ class EvaluationConfig:
     compression_interval: Optional[int] = None
     target_size: Optional[int] = None
     hidden_states_buffer_size: Optional[int] = None
+    dual_phase_mode: Optional[str] = None
+    decode_block_budget: Optional[int] = None
+    decode_cold_block_budget: Optional[int] = None
+    decode_budget_scale: Optional[float] = None
+    decode_cold_budget_scale: Optional[float] = None
 
     # Output and logging
     output_dir: str = "./results"
@@ -387,6 +395,24 @@ class EvaluationConfig:
             components.append(f"tasks{task_tag}")
         if self.samples_per_task is not None:
             components.append(f"spt{self.samples_per_task}")
+        if self.min_answer_tokens is not None:
+            components.append(f"mina{self.min_answer_tokens}")
+        if self.min_context_tokens is not None:
+            components.append(f"minc{self.min_context_tokens}")
+        if self.max_filtered_samples is not None:
+            components.append(f"mfs{self.max_filtered_samples}")
+        if self.compression_interval is not None:
+            components.append(f"cint{self.compression_interval}")
+        if self.dual_phase_mode is not None:
+            components.append(f"dpmode{self.dual_phase_mode}")
+        if self.decode_block_budget is not None:
+            components.append(f"dbudget{self.decode_block_budget}")
+        if self.decode_cold_block_budget is not None:
+            components.append(f"dcoldbudget{self.decode_cold_block_budget}")
+        if self.decode_budget_scale is not None:
+            components.append(f"dbscale{self.decode_budget_scale:.2f}")
+        if self.decode_cold_budget_scale is not None:
+            components.append(f"dcoldscale{self.decode_cold_budget_scale:.2f}")
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
         if self.pg19_target_tokens is not None and self.dataset == "pg19":
@@ -591,20 +617,44 @@ class EvaluationRunner:
                 f"Set ThinKPress key_channel_compression_ratio to {key_channel_compression_ratio}"
             )
         elif isinstance(press, DualPhasePerLayerPress):
+            dual_phase_mode = self.config.dual_phase_mode or "compute_cold_fixed_budget"
+            if dual_phase_mode not in {"permanent_fixed_budget", "compute_cold_fixed_budget"}:
+                raise ValueError(
+                    "dual_phase_mode must be one of "
+                    "{'permanent_fixed_budget', 'compute_cold_fixed_budget'}"
+                )
+
             if self.config.compression_interval is not None:
                 press.compression_interval = self.config.compression_interval
+            if self.config.hidden_states_buffer_size is not None:
+                press.decode_hidden_states_buffer_size = self.config.hidden_states_buffer_size
 
-            # For this evaluation harness, DualPhasePerLayerPress is used as a
-            # non-permanent block selector: keep all KV physically, and let
-            # `compression_ratio` denote the active block ratio for both phases.
-            press.default_phase_ratios = [0.0, 0.0]
-            press.default_phase_cold_ratios = [compression_ratio, compression_ratio]
-            press.layer_phase_ratios = {}
-            press.layer_phase_cold_ratios = {}
+            _apply_blockwise_config(press.prefill_press)
+            _apply_blockwise_config(press.decode_press)
+
+            assert self.config.block_size is not None, (
+                "block_size must be set for DualPhasePerLayerPress"
+            )
+            press.block_size = self.config.block_size
+            press.prefill_press.block_size = self.config.block_size
+            press.decode_press.block_size = self.config.block_size
+            press.decode_press.q_window_size = self.config.q_window_size or self.config.block_size
+            press.decode_hidden_states_buffer_size = self.config.q_window_size or self.config.block_size
+            press.decode_mode = dual_phase_mode
+            press.compression_ratio = compression_ratio
+            press.decode_block_budget = self.config.decode_block_budget
+            press.decode_cold_block_budget = self.config.decode_cold_block_budget
+            press.decode_budget_scale = self.config.decode_budget_scale or 1.0
+            press.decode_cold_budget_scale = self.config.decode_cold_budget_scale or 1.0
 
             logger.info(
-                "Set DualPhasePerLayerPress non-permanent mode "
-                f"(permanent_ratio=0.0, active_ratio={compression_ratio}, compression_interval={press.compression_interval})"
+                "Set DualPhasePerLayerPress "
+                f"(mode={press.decode_mode}, prefill_ratio={press.compression_ratio}, "
+                f"compression_interval={press.compression_interval}, "
+                f"decode_block_budget={press.decode_block_budget}, decode_cold_block_budget={press.decode_cold_block_budget}, "
+                f"decode_budget_scale={press.decode_budget_scale}, "
+                f"decode_cold_budget_scale={press.decode_cold_budget_scale}, "
+                f"decode_hidden_states_buffer_size={press.decode_hidden_states_buffer_size})"
             )
         elif isinstance(press, DecodingPress):
             press.compression_interval = (
@@ -727,6 +777,62 @@ class EvaluationRunner:
             logger.info(
                 f"Filtered dataset to tasks {task_names}: kept {len(df)} / {original_len} samples."
             )
+
+        if self.config.min_answer_tokens is not None or self.config.min_context_tokens is not None:
+            tokenizer = self.pipeline.tokenizer
+
+            def _reference_answer_text(row):
+                if "answers" in row and row["answers"] is not None:
+                    answers = row["answers"]
+                    if hasattr(answers, "tolist") and not isinstance(answers, list):
+                        answers = answers.tolist()
+                    if isinstance(answers, (list, tuple)) and answers:
+                        return max((str(item) for item in answers if item is not None), key=len, default="")
+                if "answer" in row and row["answer"] is not None:
+                    return str(row["answer"])
+                return ""
+
+            def _token_length(text: str) -> int:
+                return len(tokenizer.encode(text, add_special_tokens=False))
+
+            df = df.copy()
+            if self.config.min_context_tokens is not None:
+                df["context_token_length"] = df["context"].map(lambda text: _token_length(str(text)))
+            if self.config.min_answer_tokens is not None:
+                df["answer_token_length"] = df.apply(
+                    lambda row: _token_length(_reference_answer_text(row)),
+                    axis=1,
+                )
+
+            original_len = len(df)
+            if self.config.min_context_tokens is not None:
+                df = df[df["context_token_length"] >= self.config.min_context_tokens].copy()
+            if self.config.min_answer_tokens is not None:
+                df = df[df["answer_token_length"] >= self.config.min_answer_tokens].copy()
+
+            logger.info(
+                "Applied token-length filtering: kept %s / %s samples "
+                "(min_context_tokens=%s, min_answer_tokens=%s).",
+                len(df),
+                original_len,
+                self.config.min_context_tokens,
+                self.config.min_answer_tokens,
+            )
+
+            if df.empty:
+                raise ValueError(
+                    "No samples remain after token-length filtering. "
+                    f"Check min_context_tokens={self.config.min_context_tokens} "
+                    f"and min_answer_tokens={self.config.min_answer_tokens}."
+                )
+
+            if self.config.max_filtered_samples is not None and len(df) > self.config.max_filtered_samples:
+                df = df.sample(n=self.config.max_filtered_samples, random_state=self.config.seed)
+                logger.info(
+                    "Sampled filtered subset to max_filtered_samples=%s. Final dataset size: %s.",
+                    self.config.max_filtered_samples,
+                    len(df),
+                )
 
         if self.config.samples_per_task is not None:
             if "task" not in df.columns:

@@ -76,6 +76,25 @@ def attention_patch(func):
 
             # At indices, update the keys to the fake keys
             batch_indices, head_indices, seq_indices = module.masked_key_indices
+            valid_indices = (
+                (batch_indices >= 0)
+                & (batch_indices < key.shape[0])
+                & (head_indices >= 0)
+                & (head_indices < key.shape[1])
+                & (seq_indices >= 0)
+                & (seq_indices < key.shape[2])
+            )
+            if not bool(valid_indices.all()):
+                batch_indices = batch_indices[valid_indices]
+                head_indices = head_indices[valid_indices]
+                seq_indices = seq_indices[valid_indices]
+                module.masked_key_indices = (
+                    batch_indices,
+                    head_indices,
+                    seq_indices,
+                ) if batch_indices.numel() > 0 else None
+            if batch_indices.numel() == 0:
+                return func(module, query, key, value, attention_mask, dropout, **kwargs)
             key[batch_indices, head_indices, seq_indices] = k[batch_indices, head_indices]
 
         # see https://github.com/NVIDIA/kvpress/pull/115#issuecomment-3183785597
