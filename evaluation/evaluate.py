@@ -618,10 +618,14 @@ class EvaluationRunner:
             )
         elif isinstance(press, DualPhasePerLayerPress):
             dual_phase_mode = self.config.dual_phase_mode or "compute_cold_fixed_budget"
-            if dual_phase_mode not in {"permanent_fixed_budget", "compute_cold_fixed_budget"}:
+            if dual_phase_mode not in {
+                "permanent_fixed_budget",
+                "compute_cold_fixed_budget",
+                "hybrid_fixed_budget",
+            }:
                 raise ValueError(
                     "dual_phase_mode must be one of "
-                    "{'permanent_fixed_budget', 'compute_cold_fixed_budget'}"
+                    "{'permanent_fixed_budget', 'compute_cold_fixed_budget', 'hybrid_fixed_budget'}"
                 )
 
             if self.config.compression_interval is not None:

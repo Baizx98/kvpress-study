@@ -180,6 +180,41 @@ def test_compute_cold_decode_uses_prefill_budget_without_physical_deletion():
     assert press.layer_block_states[layer0.layer_idx]["mode"] == "compute_cold_fixed_budget"
 
 
+def test_hybrid_decode_physically_retains_total_budget_and_masks_active_subset():
+    press = build_dual_phase(decode_mode="hybrid_fixed_budget")
+    press.decode_block_budget = 3
+    press.decode_cold_block_budget = 2
+    layer0 = DummyModule(layer_idx=0)
+    keys, values = make_kv(seq_len=8)
+    prefill_keys, prefill_values = press._compress_prefill(
+        layer0,
+        make_hidden_states(8),
+        keys,
+        values,
+        None,
+        {"cache_position": torch.tensor([8])},
+    )
+    extra_keys, extra_values = make_kv(seq_len=4)
+    decode_keys = torch.cat([prefill_keys, extra_keys], dim=2)
+    decode_values = torch.cat([prefill_values, extra_values], dim=2)
+
+    retained_keys, retained_values = press._hybrid_decode_step(
+        layer0,
+        make_hidden_states(2),
+        decode_keys,
+        decode_values,
+        None,
+        {"cache_position": torch.tensor([10])},
+    )
+
+    assert retained_keys.shape[2] == 6
+    assert retained_values.shape[2] == 6
+    assert layer0.masked_key_indices is not None
+    assert press.layer_block_states[layer0.layer_idx]["mode"] == "hybrid_fixed_budget"
+    assert press.layer_block_states[layer0.layer_idx]["live_blocks"] == 3
+    assert press.layer_block_states[layer0.layer_idx]["active_blocks"] == 2
+
+
 def test_forward_hook_prefill_writes_compressed_cache():
     press = build_dual_phase()
     layer0 = DummyModule(layer_idx=0)
@@ -232,6 +267,43 @@ def test_forward_hook_compute_cold_masks_decode_cache_without_deletion():
     )
 
     assert cache.layers[0].keys.shape[2] == 8
+    assert layer0.masked_key_indices is not None
+
+
+def test_forward_hook_hybrid_retains_cache_and_applies_mask():
+    press = build_dual_phase(decode_mode="hybrid_fixed_budget")
+    press.decode_block_budget = 3
+    press.decode_cold_block_budget = 2
+    layer0 = DummyModule(layer_idx=0)
+    keys, values = make_kv(seq_len=8)
+    cache = FakeCache(keys, values)
+
+    press.forward_hook(
+        layer0,
+        [],
+        {
+            "hidden_states": make_hidden_states(8),
+            "past_key_values": cache,
+            "cache_position": torch.tensor([8]),
+        },
+        [None, None],
+    )
+    cache.layers[0].keys = torch.cat([cache.layers[0].keys, keys[:, :, :4]], dim=2)
+    cache.layers[0].values = torch.cat([cache.layers[0].values, values[:, :, :4]], dim=2)
+
+    press.forward_hook(
+        layer0,
+        [],
+        {
+            "hidden_states": make_hidden_states(1),
+            "past_key_values": cache,
+            "cache_position": torch.tensor([10]),
+        },
+        [None, None],
+    )
+
+    assert cache.layers[0].keys.shape[2] == 6
+    assert cache.layers[0].values.shape[2] == 6
     assert layer0.masked_key_indices is not None
 
 

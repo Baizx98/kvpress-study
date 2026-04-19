@@ -17,7 +17,7 @@ from kvpress.presses.block_wise_press import BlockWisePress
 from kvpress.utils import extract_keys_and_values
 
 
-DecodeMode = Literal["permanent_fixed_budget", "compute_cold_fixed_budget"]
+DecodeMode = Literal["permanent_fixed_budget", "compute_cold_fixed_budget", "hybrid_fixed_budget"]
 PhaseName = Literal["prefill", "decode"]
 
 
@@ -76,7 +76,7 @@ class DualPhasePerLayerPress(BasePress):
         self.prefill_press.compression_ratio = ratio
 
     def __post_init__(self):
-        assert self.decode_mode in {"permanent_fixed_budget", "compute_cold_fixed_budget"}
+        assert self.decode_mode in {"permanent_fixed_budget", "compute_cold_fixed_budget", "hybrid_fixed_budget"}
         assert self.block_size > 0, "block_size must be > 0"
         assert self.compression_interval > 0, "compression_interval must be > 0"
         assert self.decode_hidden_states_buffer_size > 0, "decode_hidden_states_buffer_size must be > 0"
@@ -144,6 +144,7 @@ class DualPhasePerLayerPress(BasePress):
         has_decode_state = self.layer_block_states[layer_idx].get("mode") in {
             "permanent_fixed_budget",
             "compute_cold_fixed_budget",
+            "hybrid_fixed_budget",
         }
         should_refresh = (
             self.layer_decode_steps[layer_idx] >= self.compression_interval
@@ -160,6 +161,16 @@ class DualPhasePerLayerPress(BasePress):
 
         if self.decode_mode == "permanent_fixed_budget":
             keys, values = self._permanent_decode_step(
+                module,
+                buffered_hidden_states,
+                keys,
+                values,
+                attentions,
+                kwargs,
+            )
+            self._write_back_cache(cache, layer_idx, keys, values)
+        elif self.decode_mode == "hybrid_fixed_budget":
+            keys, values = self._hybrid_decode_step(
                 module,
                 buffered_hidden_states,
                 keys,
@@ -284,6 +295,84 @@ class DualPhasePerLayerPress(BasePress):
             "masked_tokens": 0 if mask is None else int(mask[0].numel()),
             "keep_budget": int(plan["keep_budget"]),
         }
+
+    def _hybrid_decode_step(
+        self,
+        module: nn.Module,
+        hidden_states: torch.Tensor,
+        keys: torch.Tensor,
+        values: torch.Tensor,
+        attentions: torch.Tensor | None,
+        kwargs: dict,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        layer_idx = self._resolve_layer_idx(module)
+        total_keep_budget = self._resolve_decode_budget(layer_idx, keys, cold=False)
+        active_keep_budget = self._resolve_decode_budget(layer_idx, keys, cold=True)
+        total_keep_budget = max(0, total_keep_budget)
+        active_keep_budget = max(0, min(active_keep_budget, total_keep_budget))
+
+        total_plan = self.decode_press.build_block_plan(
+            module,
+            hidden_states,
+            keys,
+            values,
+            attentions,
+            kwargs,
+            compression_ratio=0.0,
+            keep_budget=total_keep_budget,
+            force_refresh_summary=True,
+        )
+
+        original_num_blocks = total_plan["num_blocks"]
+        deleted_block_indices = self._complement_block_indices(
+            original_num_blocks,
+            total_plan["kept_block_indices"],
+            keys.device,
+        )
+        retained_keys, retained_values = self.decode_press.gather_by_token_indices(
+            keys,
+            values,
+            total_plan["token_indices"],
+        )
+
+        active_plan = self.decode_press.build_block_plan(
+            module,
+            hidden_states,
+            retained_keys,
+            retained_values,
+            attentions,
+            kwargs,
+            compression_ratio=0.0,
+            keep_budget=active_keep_budget,
+            force_refresh_summary=True,
+        )
+        self.decode_press.build_or_refresh_block_summary(
+            module,
+            retained_keys,
+            retained_values,
+            force_refresh=True,
+        )
+        mask = self._build_mask_from_active_blocks(
+            retained_keys,
+            self.block_size,
+            active_plan["kept_block_indices"],
+        )
+        mask = self._validate_mask(mask, retained_keys)
+        self.layer_cached_masks[layer_idx] = mask
+        module.masked_key_indices = mask
+        self.layer_block_states[layer_idx] = {
+            "mode": "hybrid_fixed_budget",
+            "active": active_plan["kept_block_indices"].detach().clone(),
+            "retained": total_plan["kept_block_indices"].detach().clone(),
+            "permanently_deleted": deleted_block_indices.detach().clone(),
+            "active_blocks": int(active_plan["n_kept_blocks"]),
+            "live_blocks": math.ceil(retained_keys.shape[2] / self.block_size),
+            "deleted_blocks": int(deleted_block_indices.shape[-1]),
+            "masked_tokens": 0 if mask is None else int(mask[0].numel()),
+            "keep_budget": int(total_plan["keep_budget"]),
+            "active_budget": int(active_plan["keep_budget"]),
+        }
+        return retained_keys, retained_values
 
     def _resolve_decode_budget(self, layer_idx: int, keys: torch.Tensor, cold: bool) -> int:
         num_blocks = math.ceil(keys.shape[2] / self.block_size)
