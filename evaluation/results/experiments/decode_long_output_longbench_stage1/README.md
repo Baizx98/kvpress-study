@@ -53,5 +53,6 @@
 
 - 两种 decode fixed-budget 策略质量损失都不大。
 - `permanent_fixed_budget` 和 `compute_cold_fixed_budget` 的宏平均非常接近。
-- 当前更突出的瓶颈是运行开销，而不是质量崩溃。
-- 下一步应优先补 `TPOT / peak memory / active blocks / live blocks` 等系统指标。
+- 当前更关键的问题是最终推理框架里该如何组合 prefill 与 decode 策略，而不是继续做 decode-only 的单点观察。
+- 下一步实验规划见：
+  - [`decode_final_framework_next_stage_plan_zh.md`](/home10T/bzx/workspace/kvpress-study/note/decode_final_framework_next_stage_plan_zh.md)

@@ -31,3 +31,5 @@
 这里保留尚未归并成正式实验组的早期结果，避免信息丢失。
 - [blockwise_stage3_ratio70_fraction20_primarybench](/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/blockwise_stage3_ratio70_fraction20_primarybench/README.md)
 - [decode_long_output_longbench_stage1](/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/decode_long_output_longbench_stage1/README.md)
+- [decode_final_framework_fixed_budget_stage1](/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/decode_final_framework_fixed_budget_stage1/README.md)
+- [decode_hybrid_final_stage](/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/decode_hybrid_final_stage/README.md)

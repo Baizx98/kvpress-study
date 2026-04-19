@@ -186,39 +186,24 @@
 
 ## 7. 下一步建议
 
-优先级 1：补过程统计
+如果下一阶段不把重点放在时间、显存等系统指标上，而是优先围绕最终推理框架的质量表现推进，那么更合理的下一步不是继续量 runtime，而是直接回答下面三个问题：
 
-- `generated_length`
-- `TPOT`
-- `peak_gpu_memory`
-- `decode_refresh_count`
-- `avg_live_blocks`
-- `avg_active_blocks`
-- `masked_token_ratio`
+1. 最终框架里，decode 策略到底应该选：
+   - `permanent_fixed_budget`
+   - `compute_cold_fixed_budget`
+   - 还是两者结合
+2. 当前 decode 策略在不同 budget 下是否稳定
+3. decode 策略和 prefill 压缩组合后，是否仍然保持当前结论
 
-优先级 2：降低 decode refresh 成本
+因此，更推荐的下一步是：
 
-- 从每 `16` step 刷新改成：
-  - `32`
-  - `64`
-- 或者只在新 decode block 形成时更新 summary，非必要不重建全部块摘要
+- 先做 decode-only 的 budget sweep
+- 再做 prefill + decode 的联合框架实验
+- 最后用 `RULER` 做补充验证，检查检索/多 key 任务上是否出现与 LongBench 不同的偏好
 
-优先级 3：小规模 budget sweep
+具体实验设计已经整理到：
 
-- `0.75 * B_prefill_keep`
-- `1.00 * B_prefill_keep`
-- `1.25 * B_prefill_keep`
-
-优先级 4：方法选择
-
-- 如果目标是显存 cap，继续优化 `permanent_fixed_budget`
-- 如果目标是未来 GPU/CPU hot-cold 调度，继续优化 `compute_cold_fixed_budget`
-
-当前更推荐：
-
-- 短期继续保留两条路径
-- 不立刻淘汰任何一条
-- 先补系统指标，再做下一轮选择
+- [`decode_final_framework_next_stage_plan_zh.md`](/home10T/bzx/workspace/kvpress-study/note/decode_final_framework_next_stage_plan_zh.md)
 
 ---
 
@@ -228,8 +213,8 @@
 
 - 每个任务只取 `20` 条样本
 - 只看 LongBench 长输出子集
-- 还没有记录真实 TPOT 和 peak memory
-- 还没有导出每层 block state trace
+- 还没有系统比较不同 decode budget 的稳定性
+- 还没有比较 decode-only 与 prefill+decode 联合框架
 - 当前 quality scorer 仍是 LongBench 自动指标，不能完全代表摘要可读性
 
 这些限制不影响本轮作为 stage1 feasibility test 的价值，但不应直接作为最终系统 claim。

@@ -1,0 +1,136 @@
+{
+  "experiment_name": "decode_final_framework_fixed_budget_stage1",
+  "budgets": [
+    96,
+    128,
+    160
+  ],
+  "longbench_datasets": [
+    "gov_report",
+    "qmsum",
+    "multi_news"
+  ],
+  "ruler_tasks": [
+    "niah_single_3",
+    "niah_multikey_2",
+    "niah_multikey_3",
+    "qa_2"
+  ],
+  "longbench": {
+    "gov_report": {
+      "blockwise+cold@96": 29.21,
+      "blockwise+cold@128": 31.18,
+      "blockwise+cold@160": 32.22,
+      "blockwise+perm@96": 29.89,
+      "blockwise+perm@128": 30.21,
+      "blockwise+perm@160": 32.34,
+      "dense+cold@96": 30.81,
+      "dense+cold@128": 31.32,
+      "dense+cold@160": 31.92,
+      "dense+perm@96": 30.15,
+      "dense+perm@128": 31.25,
+      "dense+perm@160": 32.65
+    },
+    "multi_news": {
+      "blockwise+cold@96": 23.17,
+      "blockwise+cold@128": 23.8,
+      "blockwise+cold@160": 25.21,
+      "blockwise+perm@96": 24.65,
+      "blockwise+perm@128": 23.43,
+      "blockwise+perm@160": 23.31,
+      "dense+cold@96": 24.38,
+      "dense+cold@128": 24.47,
+      "dense+cold@160": 25.38,
+      "dense+perm@96": 23.69,
+      "dense+perm@128": 23.89,
+      "dense+perm@160": 23.96
+    },
+    "qmsum": {
+      "blockwise+cold@96": 24.15,
+      "blockwise+cold@128": 24.36,
+      "blockwise+cold@160": 22.29,
+      "blockwise+perm@96": 23.09,
+      "blockwise+perm@128": 23.15,
+      "blockwise+perm@160": 22.99,
+      "dense+cold@96": 22.54,
+      "dense+cold@128": 22.48,
+      "dense+cold@160": 23.1,
+      "dense+perm@96": 23.18,
+      "dense+perm@128": 22.53,
+      "dense+perm@160": 24.87
+    }
+  },
+  "ruler": {
+    "dense+cold@128": {
+      "niah_multikey_2": {
+        "string_match": 95.0
+      },
+      "niah_multikey_3": {
+        "string_match": 65.0
+      },
+      "niah_single_3": {
+        "string_match": 100.0
+      },
+      "qa_2": {
+        "string_match": 60.0
+      }
+    },
+    "dense+cold@160": {
+      "niah_multikey_2": {
+        "string_match": 100.0
+      },
+      "niah_multikey_3": {
+        "string_match": 90.0
+      },
+      "niah_single_3": {
+        "string_match": 100.0
+      },
+      "qa_2": {
+        "string_match": 60.0
+      }
+    },
+    "dense+perm@128": {
+      "niah_multikey_2": {
+        "string_match": 95.0
+      },
+      "niah_multikey_3": {
+        "string_match": 65.0
+      },
+      "niah_single_3": {
+        "string_match": 100.0
+      },
+      "qa_2": {
+        "string_match": 60.0
+      }
+    },
+    "dense+perm@160": {
+      "niah_multikey_2": {
+        "string_match": 100.0
+      },
+      "niah_multikey_3": {
+        "string_match": 90.0
+      },
+      "niah_single_3": {
+        "string_match": 100.0
+      },
+      "qa_2": {
+        "string_match": 60.0
+      }
+    }
+  },
+  "longbench_macro": {
+    "dense+perm@96": 25.673333333333332,
+    "dense+perm@128": 25.89,
+    "dense+perm@160": 27.16,
+    "dense+cold@96": 25.909999999999997,
+    "dense+cold@128": 26.09,
+    "dense+cold@160": 26.8,
+    "blockwise+perm@96": 25.876666666666665,
+    "blockwise+perm@128": 25.596666666666664,
+    "blockwise+perm@160": 26.213333333333335,
+    "blockwise+cold@96": 25.51,
+    "blockwise+cold@128": 26.44666666666667,
+    "blockwise+cold@160": 26.573333333333334
+  },
+  "record_count": 40
+}

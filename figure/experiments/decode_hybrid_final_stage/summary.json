@@ -1,0 +1,131 @@
+{
+  "experiment": "decode_hybrid_final_stage",
+  "longbench": {
+    "tasks": {
+      "gov_report": {
+        "Compute-Cold 128": 31.32,
+        "Compute-Cold 160": 31.92,
+        "Hybrid 128/96": 29.89,
+        "Hybrid 160/128": 31.17,
+        "Permanent 128": 31.25,
+        "Permanent 160": 32.65
+      },
+      "multi_news": {
+        "Compute-Cold 128": 24.47,
+        "Compute-Cold 160": 25.38,
+        "Hybrid 128/96": 24.27,
+        "Hybrid 160/128": 23.9,
+        "Permanent 128": 23.89,
+        "Permanent 160": 23.96
+      },
+      "qmsum": {
+        "Compute-Cold 128": 22.48,
+        "Compute-Cold 160": 23.1,
+        "Hybrid 128/96": 21.44,
+        "Hybrid 160/128": 23.21,
+        "Permanent 128": 22.53,
+        "Permanent 160": 24.87
+      }
+    },
+    "macro_avg": {
+      "Compute-Cold 128": 26.09,
+      "Compute-Cold 160": 26.8,
+      "Hybrid 128/96": 25.2,
+      "Hybrid 160/128": 26.09,
+      "Permanent 128": 25.89,
+      "Permanent 160": 27.16
+    }
+  },
+  "ruler": {
+    "route_macro": {
+      "Compute-Cold 128": {
+        "macro_string_match": 80.0
+      },
+      "Compute-Cold 160": {
+        "macro_string_match": 87.5
+      },
+      "Hybrid 128/96": {
+        "macro_string_match": 75.0
+      },
+      "Hybrid 160/128": {
+        "macro_string_match": 80.0
+      },
+      "Permanent 128": {
+        "macro_string_match": 80.0
+      },
+      "Permanent 160": {
+        "macro_string_match": 87.5
+      }
+    },
+    "route_task_scores": {
+      "Compute-Cold 128": {
+        "niah_multikey_2": 95.0,
+        "niah_multikey_3": 65.0,
+        "niah_single_3": 100.0,
+        "qa_2": 60.0
+      },
+      "Compute-Cold 160": {
+        "niah_multikey_2": 100.0,
+        "niah_multikey_3": 90.0,
+        "niah_single_3": 100.0,
+        "qa_2": 60.0
+      },
+      "Hybrid 128/96": {
+        "niah_multikey_2": 85.0,
+        "niah_multikey_3": 55.0,
+        "niah_single_3": 100.0,
+        "qa_2": 60.0
+      },
+      "Hybrid 160/128": {
+        "niah_multikey_2": 95.0,
+        "niah_multikey_3": 65.0,
+        "niah_single_3": 100.0,
+        "qa_2": 60.0
+      },
+      "Permanent 128": {
+        "niah_multikey_2": 95.0,
+        "niah_multikey_3": 65.0,
+        "niah_single_3": 100.0,
+        "qa_2": 60.0
+      },
+      "Permanent 160": {
+        "niah_multikey_2": 100.0,
+        "niah_multikey_3": 90.0,
+        "niah_single_3": 100.0,
+        "qa_2": 60.0
+      }
+    }
+  },
+  "false_failures": [
+    {
+      "job_id": "ruler:4096__dense_prefill__permanent__budget128",
+      "attempts": 1,
+      "last_reason": "missing_metrics"
+    },
+    {
+      "job_id": "ruler:4096__dense_prefill__permanent__budget160",
+      "attempts": 1,
+      "last_reason": "missing_metrics"
+    },
+    {
+      "job_id": "ruler:4096__dense_prefill__compute_cold__budget128",
+      "attempts": 1,
+      "last_reason": "missing_metrics"
+    },
+    {
+      "job_id": "ruler:4096__dense_prefill__compute_cold__budget160",
+      "attempts": 1,
+      "last_reason": "missing_metrics"
+    },
+    {
+      "job_id": "ruler:4096__dense_prefill__hybrid__total128_active96",
+      "attempts": 1,
+      "last_reason": "missing_metrics"
+    },
+    {
+      "job_id": "ruler:4096__dense_prefill__hybrid__total160_active128",
+      "attempts": 1,
+      "last_reason": "missing_metrics"
+    }
+  ]
+}

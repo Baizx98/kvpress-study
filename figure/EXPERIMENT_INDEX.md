@@ -29,3 +29,5 @@
 - 一个 `README.md`，说明实验设置、配套结果目录、推荐阅读顺序
 - [blockwise_stage3_ratio70_fraction20_primarybench](/home10T/bzx/workspace/kvpress-study/figure/experiments/blockwise_stage3_ratio70_fraction20_primarybench/README.md)
 - [decode_long_output_longbench_stage1](/home10T/bzx/workspace/kvpress-study/figure/experiments/decode_long_output_longbench_stage1/README.md)
+- [decode_final_framework_fixed_budget_stage1](/home10T/bzx/workspace/kvpress-study/figure/experiments/decode_final_framework_fixed_budget_stage1/README.md)
+- [decode_hybrid_final_stage](/home10T/bzx/workspace/kvpress-study/figure/experiments/decode_hybrid_final_stage/README.md)
