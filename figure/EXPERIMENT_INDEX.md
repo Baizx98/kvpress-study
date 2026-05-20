@@ -31,3 +31,6 @@
 - [decode_long_output_longbench_stage1](/home10T/bzx/workspace/kvpress-study/figure/experiments/decode_long_output_longbench_stage1/README.md)
 - [decode_final_framework_fixed_budget_stage1](/home10T/bzx/workspace/kvpress-study/figure/experiments/decode_final_framework_fixed_budget_stage1/README.md)
 - [decode_hybrid_final_stage](/home10T/bzx/workspace/kvpress-study/figure/experiments/decode_hybrid_final_stage/README.md)
+- `ATC26_prefill_sweep_blockwise_snapkv_chunkkv_longbench_needle_pg19`: ATC26 prefill-only sweep figures for BlockWise, SnapKV, and ChunkKV.
+- `scoring_overhead_snapkv_chunkkv`: SnapKV and ChunkKV scoring overhead figures against fused attention kernels.
+- `sparse_index_overhead_snapkv_chunkkv_blockwise`: paper-style sparse-index overhead figure for SnapKV, ChunkKV, and KVCore.
