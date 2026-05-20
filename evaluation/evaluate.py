@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import contextlib
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0,1")
 os.environ.setdefault("HF_HOME", "/Tan/dataset/hf_home")
 os.environ.setdefault("HF_DATASETS_CACHE", "/Tan/dataset/hf_home/datasets")
 os.environ.setdefault("HUGGINGFACE_HUB_CACHE", "/Tan/dataset/hf_home/hub")
@@ -229,6 +229,7 @@ class EvaluationConfig:
 
     # Output and logging
     output_dir: str = "./results"
+    result_file_prefix: str = ""
     log_level: str = "INFO"
 
     # Model-specific parameters
@@ -1134,9 +1135,10 @@ class EvaluationRunner:
         output_dir = self._setup_directories()
 
         results_dir = self.config.get_results_dir(output_dir)
-        predictions_filename = results_dir / "predictions.csv"
-        metrics_filename = results_dir / "metrics.json"
-        config_filename = results_dir / "config.yaml"
+        file_prefix = f"{self.config.result_file_prefix}_" if self.config.result_file_prefix else ""
+        predictions_filename = results_dir / f"{file_prefix}predictions.csv"
+        metrics_filename = results_dir / f"{file_prefix}metrics.json"
+        config_filename = results_dir / f"{file_prefix}config.yaml"
 
         if predictions_filename.exists() and metrics_filename.exists():
             logger.info(
