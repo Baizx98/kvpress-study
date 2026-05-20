@@ -1,0 +1,274 @@
+model,model_label,method,method_label,compression_ratio,dataset_key,needle_depth,rouge_l_f,predicted_answer
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.3,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.4,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.5,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.6,needle_in_haystack:16384,0,82.60869516068054," to eat a sandwich and sit in Dolores Park on a sunny day. This is mentioned in the first line of the book: ""Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny"
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.7,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.8,needle_in_haystack:16384,0,62.068965089179564, to eat a sandwich and sit in Dolores Park.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.3,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.4,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.5,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.6,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.7,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.8,needle_in_haystack:16384,0,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.3,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.4,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.5,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.6,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.7,needle_in_haystack:16384,25,62.068965089179564, to eat a sandwich and sit in Dolores Park.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.8,needle_in_haystack:16384,25,62.068965089179564, to eat a sandwich and sit in Dolores Park.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.3,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.4,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.5,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.6,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.7,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.8,needle_in_haystack:16384,25,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.3,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.4,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.5,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.6,needle_in_haystack:16384,50,57.14285673469389, eat a sandwich and sit in Dolores Park.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.7,needle_in_haystack:16384,50,62.068965089179564, to eat a sandwich and sit in Dolores Park.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.8,needle_in_haystack:16384,50,68.2926824271267," to eat a sandwich and sit in a park, but more specifically, the text says ""the best thing to do in San Francisco is eat a sandwich and sit in a park, but more specifically, the best thing to do in San Francisco is eat"
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.3,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.4,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.5,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.6,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.7,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.8,needle_in_haystack:16384,50,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.3,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.4,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.5,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.6,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.7,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.8,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.3,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.4,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.5,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.6,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.7,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.8,needle_in_haystack:16384,75,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.3,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.4,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.5,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.6,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.7,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,blockwise,BlockWise,0.8,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.3,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.4,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.5,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.6,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.7,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+llama31_8b_instruct,Llama-3.1-8B-Instruct,snapkv,SnapKV,0.8,needle_in_haystack:16384,100,70.96774147762747, eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.3,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.4,needle_in_haystack:16384,0,55.3191484472612,"to eat a sandwich and sit in Dolores Park on a sunny day. This is a suggestion made in the book, which emphasizes simplicity and accessibility in writing to engage readers more deeply."
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.5,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.6,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.7,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.8,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.3,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.4,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.5,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.6,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.7,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.8,needle_in_haystack:16384,0,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.3,needle_in_haystack:16384,25,15.094339152723405,"to relax and enjoy a picnic in a beautiful park like Golden Gate Park or Dolores Park, or visit a museum like the San Francisco Museum of Modern Art (SFMOMA) or the California Academy of Sciences. If you're feeling more"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.4,needle_in_haystack:16384,25,35.29411717031911,"to relax and enjoy a picnic in
+Dolores Park on a sunny day. However, if you're looking for a more active
+experience, the city offers a variety of options such as exploring the
+Golden Gate Park"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.5,needle_in_haystack:16384,25,15.38461491124262,"to enjoy a leisurely picnic in a beautiful park, such as Golden Gate Park or Dolores Park, and take in the city's stunning views and vibrant atmosphere. However, if you're looking for a more specific recommendation,"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.6,needle_in_haystack:16384,25,42.55319100045269,"to enjoy the city's vibrant culture and scenic beauty. However, if you're referring to the book's context, the best thing to do in San Francisco, according to the author, is to start a startup."
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.7,needle_in_haystack:16384,25,38.46153798816568,"to enjoy the city's vibrant culture and scenic beauty. However, if you're referring to the specific context of the book, the best thing to do in San Francisco would be to have a meal at a restaurant, as suggested in"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.8,needle_in_haystack:16384,25,18.86792405838378,"to enjoy the city's vibrant culture and scenic beauty. However, the book suggests that if you're looking for a specific activity, you might want to try visiting a park, such as Golden Gate Park or the Presidio,"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.3,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.4,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.5,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.6,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.7,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.8,needle_in_haystack:16384,25,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.3,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.4,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.5,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.6,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.7,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.8,needle_in_haystack:16384,50,44.44444397805213,"to enjoy a picnic at Golden Gate Park or a walk along the beach at Ocean Beach. However, if you're referring to the advice given in the book, the best thing to do in San Francisco is to start a startup and attend events"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.3,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.4,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.5,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.6,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.7,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.8,needle_in_haystack:16384,50,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.3,needle_in_haystack:16384,75,47.27272680991737,to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that the most enjoyable activities are those that promote relaxation and enjoyment of the surroundings. The author suggests that this activity
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.4,needle_in_haystack:16384,75,47.27272680991737,to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that the most enjoyable activities are those that promote relaxation and enjoyment of the surroundings. The author suggests that this activity
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.5,needle_in_haystack:16384,75,60.37735802064793,to eat a sandwich and sit in Dolores Park on a sunny day. This is a reference to a line in the book that suggests this as the best activity in San Francisco. The book emphasizes the importance of simplicity and readability in writing
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.6,needle_in_haystack:16384,75,70.37036990397806,"to eat a sandwich and sit in Dolores Park on a sunny day. This is a reference to a line in the book that suggests the best thing to do in San Francisco is to enjoy simple pleasures, rather than focusing solely on work or"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.7,needle_in_haystack:16384,75,70.58823481737794,"to eat a sandwich and sit in Dolores Park on a sunny day. However, if you're referring to the book's theme of writing succinctly, the best thing to do in San Francisco (or anywhere) would be to"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.8,needle_in_haystack:16384,75,66.66666620027436,"to eat a sandwich and sit in Dolores Park on a sunny day. However, if you're referring to the book's theme of writing using ordinary words and simple sentences, the best thing to do in San Francisco would be to write"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,75,47.27272680991737,to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that the most enjoyable activities are those that allow for relaxation and enjoyment of the surroundings. The author suggests that this
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,75,53.0612240066639,"to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that the most enjoyable activities are those that allow for relaxation and leisure, and that a sandwich and a day in"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,75,47.27272680991737,to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that the most enjoyable activities are those that promote relaxation and enjoyment of the surroundings. The author suggests that this activity
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,75,49.05660330366679,to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that the most enjoyable activities are simple and unpretentious. The author suggests that this activity is a good way
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,75,50.98039168012304,"to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that regularity and readability are important qualities in writing, and that simple, ordinary words and sentences are easier to"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,75,48.148147681755844,"to eat a sandwich and sit in Dolores Park on a sunny day. This is a suggestion made in the book, which emphasizes the importance of simple, enjoyable activities and avoiding unnecessary complications. The book also encourages readers to focus on"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.3,needle_in_haystack:16384,75,53.0612240066639,"to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that the most enjoyable activities are those that allow for relaxation and leisure, and that a sandwich and a day in"
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.4,needle_in_haystack:16384,75,47.27272680991737,to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that the most enjoyable activities are those that allow for relaxation and enjoyment of the surroundings. The author suggests that this
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.5,needle_in_haystack:16384,75,47.27272680991737,to eat a sandwich and sit in Dolores Park on a sunny day. This is a recommendation based on the author's belief that the most enjoyable activities are those that allow for relaxation and enjoyment of one's surroundings. The author suggests
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.6,needle_in_haystack:16384,75,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.7,needle_in_haystack:16384,75,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.8,needle_in_haystack:16384,75,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.3,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.4,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.5,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.6,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.7,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,blockwise,BlockWise,0.8,needle_in_haystack:16384,100,70.96774147762747,eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,100,70.96774147762747,eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.3,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.4,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.5,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.6,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.7,needle_in_haystack:16384,100,74.99999953125,to eat a sandwich and sit in Dolores Park on a sunny day.
+mistral_7b_instruct_v03,Mistral-7B-Instruct-v0.3,snapkv,SnapKV,0.8,needle_in_haystack:16384,100,70.96774147762747,eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.3,needle_in_haystack:16384,0,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.4,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.5,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.6,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.7,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.8,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,0,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,0,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,0,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,0,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,0,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.3,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.4,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.5,needle_in_haystack:16384,0,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.6,needle_in_haystack:16384,0,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.7,needle_in_haystack:16384,0,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.8,needle_in_haystack:16384,0,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.3,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.4,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.5,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.6,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.7,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.8,needle_in_haystack:16384,25,37.20930182801514," to **eat a sandwich and sit in Dolores Park**. This is mentioned in the book as a simple, enjoyable activity that captures the essence of the city."
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,25,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.3,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.4,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.5,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.6,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.7,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.8,needle_in_haystack:16384,25,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.3,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.4,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.5,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.6,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.7,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.8,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,50,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,50,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.3,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.4,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.5,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.6,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.7,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.8,needle_in_haystack:16384,50,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.3,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.4,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.5,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.6,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.7,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.8,needle_in_haystack:16384,75,62.068965089179564, to eat a sandwich and sit in Dolores Park.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.3,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.4,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.5,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.6,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.7,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.8,needle_in_haystack:16384,75,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.3,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.4,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.5,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.6,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.7,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,blockwise,BlockWise,0.8,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.3,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.4,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.5,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.6,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.7,needle_in_haystack:16384,100,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,chunkkv,ChunkKV,0.8,needle_in_haystack:16384,100,58.06451567117586, **eat a sandwich and sit in Dolores Park on a sunny day**.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.3,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.4,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.5,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.6,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.7,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
+qwen3_8b,Qwen3-8B,snapkv,SnapKV,0.8,needle_in_haystack:16384,100,74.99999953125, to eat a sandwich and sit in Dolores Park on a sunny day.
