@@ -52,7 +52,7 @@ class QuestBlockwisePress(BlockWisePress):
         values: torch.Tensor,
         tail_query_states: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
-        del module, tail_query_states
+        del module, values, tail_query_states
         bsz, num_key_value_heads, key_len, head_dim = keys.shape
         num_blocks = (key_len + self.block_size - 1) // self.block_size
         if num_blocks == 0:
@@ -60,23 +60,19 @@ class QuestBlockwisePress(BlockWisePress):
 
         min_keys = []
         max_keys = []
-        mean_values = []
         token_counts = []
         for block_idx in range(num_blocks):
             start = block_idx * self.block_size
             end = min(start + self.block_size, key_len)
             block_keys = keys[:, :, start:end]
-            block_values = values[:, :, start:end]
             min_keys.append(block_keys.amin(dim=2))
             max_keys.append(block_keys.amax(dim=2))
-            mean_values.append(block_values.mean(dim=2))
             token_counts.append(torch.full((bsz,), end - start, dtype=torch.long, device=keys.device))
 
         return {
             "num_blocks": torch.tensor(num_blocks, dtype=torch.long, device=keys.device),
             "min_keys": torch.stack(min_keys, dim=2),
             "max_keys": torch.stack(max_keys, dim=2),
-            "mean_values": torch.stack(mean_values, dim=2),
             "token_counts": torch.stack(token_counts, dim=1),
         }
 

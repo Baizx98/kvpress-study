@@ -10,6 +10,7 @@ from typing import Any
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 from kvpress.presses.base_press import BasePress
 from kvpress.presses.blockwise_components import (
@@ -55,6 +56,8 @@ class BlockWisePress(BasePress):
     query_agg_mode: str = "mean"
     head_agg_mode: str = "uniform_mean"
     representative_k: int = 4
+    # Deprecated: retained so older evaluation configs can still be parsed.
+    # BlockWisePress no longer builds multi-representative block summaries.
     multi_rep_k: int = 4
     query_topr: int | None = None
     head_topk: int = 1
@@ -85,7 +88,9 @@ class BlockWisePress(BasePress):
             f"Unsupported head_agg_mode: {self.head_agg_mode}"
         )
         assert self.representative_k > 0, "representative_k must be > 0"
-        assert self.multi_rep_k > 0, "multi_rep_k must be > 0"
+        assert self.summary_mode not in {"multi_rep_max", "adaptive_fusion_v1"}, (
+            f"{self.summary_mode} requires multi_rep_keys, which are disabled in BlockWisePress"
+        )
         assert self.head_topk > 0, "head_topk must be > 0"
 
     def _resolve_layer_idx(self, module: nn.Module) -> int:
@@ -102,9 +107,6 @@ class BlockWisePress(BasePress):
 
     def _resolve_representative_k(self) -> int:
         return min(self.representative_k, self.block_size)
-
-    def _resolve_multi_rep_k(self) -> int:
-        return min(self.multi_rep_k, self.block_size)
 
     def blend_score_reuse_hint(
         self,
@@ -129,8 +131,6 @@ class BlockWisePress(BasePress):
             "num_blocks": torch.tensor(0, dtype=torch.long, device=keys.device),
             "mean_keys": keys.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
             "topk_key_means": keys.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
-            "multi_rep_keys": keys.new_zeros((bsz, num_key_value_heads, 0, 0, head_dim)),
-            "mean_values": values.new_zeros((bsz, num_key_value_heads, 0, head_dim)),
             "token_counts": torch.zeros((bsz, 0), dtype=torch.long, device=keys.device),
         }
 
@@ -148,24 +148,53 @@ class BlockWisePress(BasePress):
 
         topk = self._resolve_summary_topk()
         representative_k = self._resolve_representative_k()
-        multi_rep_k = self._resolve_multi_rep_k()
         layer_idx = self._resolve_layer_idx(module)
+
+        if self.representative_mode == "key_norm":
+            actual_topk = min(topk, representative_k)
+            padded_len = num_blocks * self.block_size
+            if padded_len == key_len:
+                padded_keys = keys
+            else:
+                padded_keys = F.pad(keys, (0, 0, 0, padded_len - key_len))
+            block_keys = padded_keys.view(bsz, num_key_value_heads, num_blocks, self.block_size, head_dim)
+
+            token_counts_1d = torch.full((num_blocks,), self.block_size, dtype=torch.long, device=keys.device)
+            tail_len = key_len - (num_blocks - 1) * self.block_size
+            token_counts_1d[-1] = tail_len
+            token_counts = token_counts_1d[None, :].expand(bsz, -1)
+
+            valid_mask = torch.arange(self.block_size, device=keys.device)[None, :] < token_counts_1d[:, None]
+            valid_mask = valid_mask[None, None, :, :, None]
+            valid_counts = token_counts_1d.to(keys.dtype).view(1, 1, num_blocks, 1).clamp_min(1)
+            mean_keys = (block_keys * valid_mask).sum(dim=3) / valid_counts
+
+            selector_scores = block_keys.norm(dim=-1).masked_fill(~valid_mask.squeeze(-1), float("-inf"))
+            topk_indices = selector_scores.topk(actual_topk, dim=-1).indices
+            topk_gather = topk_indices[..., None].expand(-1, -1, -1, -1, head_dim)
+            topk_keys = block_keys.gather(3, topk_gather)
+            selected_valid = valid_mask.squeeze(-1).expand(bsz, num_key_value_heads, -1, -1).gather(3, topk_indices)
+            topk_counts = token_counts_1d.clamp_max(actual_topk).to(keys.dtype).view(1, 1, num_blocks, 1).clamp_min(1)
+            topk_key_means = (topk_keys * selected_valid[..., None]).sum(dim=3) / topk_counts
+
+            return {
+                "num_blocks": torch.tensor(num_blocks, dtype=torch.long, device=keys.device),
+                "mean_keys": mean_keys,
+                "topk_key_means": topk_key_means,
+                "token_counts": token_counts,
+            }
 
         mean_keys = []
         topk_key_means = []
-        mean_values = []
-        multi_rep_keys = []
         token_counts = []
 
         for block_idx in range(num_blocks):
             start = block_idx * self.block_size
             end = min(start + self.block_size, key_len)
             block_keys = keys[:, :, start:end]
-            block_values = values[:, :, start:end]
             block_len = end - start
 
             mean_keys.append(block_keys.mean(dim=2))
-            mean_values.append(block_values.mean(dim=2))
 
             topk_token_indices = select_representative_indices(
                 mode=self.representative_mode,
@@ -180,31 +209,12 @@ class BlockWisePress(BasePress):
             topk_keys = block_keys.gather(2, topk_gather)
             topk_key_means.append(topk_keys.mean(dim=2))
 
-            multi_rep_indices = select_representative_indices(
-                mode=self.representative_mode,
-                block_keys=block_keys,
-                representative_k=min(multi_rep_k, block_len),
-                block_start=start,
-                layer_idx=layer_idx,
-                seed=self.random_seed + 1009,
-                tail_query_states=tail_query_states,
-            )
-            multi_rep_gather = multi_rep_indices[..., None].expand(-1, -1, -1, head_dim)
-            selected_keys = block_keys.gather(2, multi_rep_gather)
-            if selected_keys.shape[2] < multi_rep_k:
-                pad_count = multi_rep_k - selected_keys.shape[2]
-                pad_source = selected_keys[:, :, -1:, :].expand(-1, -1, pad_count, -1)
-                selected_keys = torch.cat([selected_keys, pad_source], dim=2)
-            multi_rep_keys.append(selected_keys)
-
             token_counts.append(torch.full((bsz,), block_len, dtype=torch.long, device=keys.device))
 
         return {
             "num_blocks": torch.tensor(num_blocks, dtype=torch.long, device=keys.device),
             "mean_keys": torch.stack(mean_keys, dim=2),
             "topk_key_means": torch.stack(topk_key_means, dim=2),
-            "multi_rep_keys": torch.stack(multi_rep_keys, dim=2),
-            "mean_values": torch.stack(mean_values, dim=2),
             "token_counts": torch.stack(token_counts, dim=1),
         }
 
@@ -255,6 +265,12 @@ class BlockWisePress(BasePress):
         query_states: torch.Tensor,
         summary: dict[str, torch.Tensor],
     ) -> torch.Tensor:
+        if self.summary_mode == "mean_plus_norm_topk_mean" and self.query_agg_mode == "mean":
+            anchors = self.mean_key_weight * summary["mean_keys"] + (
+                1.0 - self.mean_key_weight
+            ) * summary["topk_key_means"]
+            return self._score_summary_anchors(query_states, anchors).mean(dim=-2)
+
         mean_scores = aggregate_query_scores(
             self._score_summary_anchors(query_states, summary["mean_keys"]),
             mode=self.query_agg_mode,
@@ -272,50 +288,6 @@ class BlockWisePress(BasePress):
             return topk_scores
         if self.summary_mode == "mean_plus_norm_topk_mean":
             return self.mean_key_weight * mean_scores + (1.0 - self.mean_key_weight) * topk_scores
-        if self.summary_mode == "multi_rep_max":
-            rep_scores = torch.einsum(
-                "bhqd,bhkrd->bhqkr",
-                query_states,
-                summary["multi_rep_keys"],
-            ) / math.sqrt(query_states.shape[-1])
-            rep_scores = rep_scores.max(dim=-1).values
-            return aggregate_query_scores(
-                rep_scores,
-                mode=self.query_agg_mode,
-                topr=resolve_query_topr(query_states.shape[-2], self.query_topr),
-            )
-        if self.summary_mode == "adaptive_fusion_v1":
-            rep_scores = torch.einsum(
-                "bhqd,bhkrd->bhqkr",
-                query_states,
-                summary["multi_rep_keys"],
-            ) / math.sqrt(query_states.shape[-1])
-            rep_scores = rep_scores.max(dim=-1).values
-            rep_scores = aggregate_query_scores(
-                rep_scores,
-                mode=self.query_agg_mode,
-                topr=resolve_query_topr(query_states.shape[-2], self.query_topr),
-            )
-
-            token_counts = summary["token_counts"].to(query_states.dtype)[:, None, :]
-            mean_norm = summary["mean_keys"].norm(dim=-1)
-            topk_norm = summary["topk_key_means"].norm(dim=-1)
-            rep_norms = summary["multi_rep_keys"].norm(dim=-1)
-
-            concentration = (topk_norm / mean_norm.clamp_min(self.eps)).clamp(0.0, 4.0)
-            norm_var = rep_norms.var(dim=-1, unbiased=False)
-            rep_center = rep_norms.mean(dim=-1, keepdim=True)
-            rep_dispersion = ((rep_norms - rep_center) ** 2).mean(dim=-1)
-
-            topk_weight = (concentration - 1.0).clamp_min(0.0)
-            rep_weight = (rep_dispersion + norm_var).sqrt()
-            mean_weight = token_counts.reciprocal().sqrt().expand_as(topk_weight)
-
-            weights = torch.stack([mean_weight, topk_weight, rep_weight], dim=-1)
-            weights = weights / weights.sum(dim=-1, keepdim=True).clamp_min(self.eps)
-
-            stacked_scores = torch.stack([mean_scores, topk_scores, rep_scores], dim=-1)
-            return (stacked_scores * weights).sum(dim=-1)
         raise ValueError(f"Unsupported summary_mode: {self.summary_mode}")
 
     def analyze_blocks(
