@@ -1,0 +1,848 @@
+answer_prefix,compression_ratio,needle,predicted_answer,question,max_new_tokens,needle_depth,method,context_length,configured_compression_ratio,result_dir
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park.,,40,10,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,block_wise,16384,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context16384__query_aware__qwindow64__topk4__b40edf655af0
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,10,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park.,,40,50,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,block_wise,4096,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context4096__query_aware__qwindow64__topk4__4776353387fb
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day. This is mentioned in the December 2010 passage as a suggestion.,,40,10,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park.,,40,20,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park.,,40,30,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,block_wise,8192,0.5,/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--mo-4a9a52dc19__block_wise__0.50__max_context8192__query_aware__qwindow64__topk4__779e19607bea
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,10,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,chunkkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,10,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,chunkkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,10,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,chunkkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,10,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,chunkkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__chunkkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,10,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", to eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,snapkv,16384,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context16384__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,10,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,snapkv,32768,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context32768__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,10,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,snapkv,4096,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context4096__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,0,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,10,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,20,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,30,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,40,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,50,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,60,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,70,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,80,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,90,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"
+"
+
+Answer: The best thing to do in San Francisco is",0.5,"
+
+Remember, the best thing to do in San Francisco is eat a sandwich and sit in Dolores Park on a sunny day.
+
+", eat a sandwich and sit in Dolores Park on a sunny day.,,40,100,snapkv,8192,0.5,"/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_needle_heatmap_llama31_8b_ratio50/artifacts/raw/needle_in_haystack__--Tan--model--Llama-3.1-8B-Instruct__snapkv__0.50__max_context8192__query_aware__needle_depth[0, 10, 20, 30, 40, 50, 6-9e39448d8b"

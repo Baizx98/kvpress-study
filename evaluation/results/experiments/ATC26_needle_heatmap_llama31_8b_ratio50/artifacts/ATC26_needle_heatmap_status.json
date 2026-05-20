@@ -1,0 +1,154 @@
+{
+  "full__block_wise__ctx16384": {
+    "context_length": 16384,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:45:17",
+    "method": "block_wise",
+    "started_at": "2026-05-12T13:42:42",
+    "state": "success"
+  },
+  "full__block_wise__ctx32768": {
+    "context_length": 32768,
+    "detail": "returncode=1",
+    "finished_at": "2026-05-12T13:46:28",
+    "method": "block_wise",
+    "started_at": "2026-05-12T13:45:17",
+    "state": "failed"
+  },
+  "full__block_wise__ctx4096": {
+    "context_length": 4096,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:41:21",
+    "method": "block_wise",
+    "started_at": "2026-05-12T13:40:35",
+    "state": "success"
+  },
+  "full__block_wise__ctx65536": {
+    "context_length": 65536,
+    "detail": "returncode=1",
+    "finished_at": "2026-05-12T13:46:50",
+    "method": "block_wise",
+    "started_at": "2026-05-12T13:46:28",
+    "state": "failed"
+  },
+  "full__block_wise__ctx8192": {
+    "context_length": 8192,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:42:42",
+    "method": "block_wise",
+    "started_at": "2026-05-12T13:41:21",
+    "state": "success"
+  },
+  "full__chunkkv__ctx16384": {
+    "context_length": 16384,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:57:36",
+    "method": "chunkkv",
+    "started_at": "2026-05-12T13:55:56",
+    "state": "success"
+  },
+  "full__chunkkv__ctx32768": {
+    "context_length": 32768,
+    "detail": "ok",
+    "finished_at": "2026-05-12T14:01:47",
+    "method": "chunkkv",
+    "started_at": "2026-05-12T13:57:36",
+    "state": "success"
+  },
+  "full__chunkkv__ctx4096": {
+    "context_length": 4096,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:55:02",
+    "method": "chunkkv",
+    "started_at": "2026-05-12T13:54:21",
+    "state": "success"
+  },
+  "full__chunkkv__ctx65536": {
+    "context_length": 65536,
+    "detail": "returncode=1",
+    "finished_at": "2026-05-12T14:02:14",
+    "method": "chunkkv",
+    "started_at": "2026-05-12T14:01:47",
+    "state": "failed"
+  },
+  "full__chunkkv__ctx8192": {
+    "context_length": 8192,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:55:56",
+    "method": "chunkkv",
+    "started_at": "2026-05-12T13:55:02",
+    "state": "success"
+  },
+  "full__snapkv__ctx16384": {
+    "context_length": 16384,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:50:01",
+    "method": "snapkv",
+    "started_at": "2026-05-12T13:48:23",
+    "state": "success"
+  },
+  "full__snapkv__ctx32768": {
+    "context_length": 32768,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:54:01",
+    "method": "snapkv",
+    "started_at": "2026-05-12T13:50:01",
+    "state": "success"
+  },
+  "full__snapkv__ctx4096": {
+    "context_length": 4096,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:47:29",
+    "method": "snapkv",
+    "started_at": "2026-05-12T13:46:50",
+    "state": "success"
+  },
+  "full__snapkv__ctx65536": {
+    "context_length": 65536,
+    "detail": "returncode=1",
+    "finished_at": "2026-05-12T13:54:21",
+    "method": "snapkv",
+    "started_at": "2026-05-12T13:54:01",
+    "state": "failed"
+  },
+  "full__snapkv__ctx8192": {
+    "context_length": 8192,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:48:23",
+    "method": "snapkv",
+    "started_at": "2026-05-12T13:47:29",
+    "state": "success"
+  },
+  "smoke__block_wise__ctx16384": {
+    "context_length": 16384,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:39:08",
+    "method": "block_wise",
+    "started_at": "2026-05-12T13:38:19",
+    "state": "success"
+  },
+  "smoke__block_wise__ctx4096": {
+    "context_length": 4096,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:38:19",
+    "method": "block_wise",
+    "started_at": "2026-05-12T13:37:54",
+    "state": "success"
+  },
+  "smoke__chunkkv__ctx16384": {
+    "context_length": 16384,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:40:08",
+    "method": "chunkkv",
+    "started_at": "2026-05-12T13:39:31",
+    "state": "success"
+  },
+  "smoke__chunkkv__ctx4096": {
+    "context_length": 4096,
+    "detail": "ok",
+    "finished_at": "2026-05-12T13:39:31",
+    "method": "chunkkv",
+    "started_at": "2026-05-12T13:39:08",
+    "state": "success"
+  }
+}
