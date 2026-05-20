@@ -1,0 +1,17 @@
+method,token_length,subword_ppl,avg_nll,num_books,compression_ratio,stride,model,pg19_source_dataset,physical_device
+chunkkv,4096,2.253535,0.8125,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+chunkkv,8192,8.372897,2.125,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+chunkkv,12288,15.888967,2.765625,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+chunkkv,16384,1.034518,0.03393555,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+chunkkv,20480,215.939872,5.375,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+chunkkv,24576,3.629382,1.2890625,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+chunkkv,28672,1.645504,0.49804688,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+chunkkv,32768,1.001519,0.00151825,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+blockwise,4096,2.253535,0.8125,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+blockwise,8192,8.372897,2.125,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+blockwise,12288,15.888967,2.765625,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+blockwise,16384,1.034518,0.03393555,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+blockwise,20480,215.939872,5.375,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+blockwise,24576,3.629382,1.2890625,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+blockwise,28672,1.645504,0.49804688,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+blockwise,32768,1.001519,0.00151825,1,0.5,4096,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3

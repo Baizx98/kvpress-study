@@ -1,0 +1,2 @@
+method,token_length,subword_ppl,avg_nll,subword_ppl_all_targets,avg_nll_all_targets,target_tokens_scored,target_tokens_scored_all,num_books,target_tokens,include_first_target,compression_ratio,stride,model,pg19_source_dataset,physical_device
+snapkv,1024,8.712039,2.16470588,8.639934,2.15639496,255,256,1,256,False,0.5,512,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3

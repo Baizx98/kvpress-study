@@ -1,0 +1,31 @@
+{
+  "experiment_name": "pg19_dense_position_ppl_llama31_8b_snapkv_chunkkv_blockwise_ratio50",
+  "methods": [
+    "snapkv"
+  ],
+  "token_lengths": [
+    1024
+  ],
+  "args": {
+    "methods": [
+      "snapkv"
+    ],
+    "device": "cuda:0",
+    "physical_device": "GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3",
+    "compression_ratio": 0.5,
+    "target_tokens": 256,
+    "include_first_target": false,
+    "start": 1024,
+    "end": 1024,
+    "stride": 512,
+    "fraction": 0.02,
+    "max_books": 1,
+    "seed": 42,
+    "model": "/Tan/model/Llama-3.1-8B-Instruct",
+    "pg19_source_dataset": "/Tan/dataset/pg19-test",
+    "include_no_press": false,
+    "run_tag": "launch_test_3090",
+    "log_level": "INFO"
+  },
+  "cuda_visible_devices": "GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3"
+}

@@ -1,0 +1,4 @@
+method,token_length,subword_ppl,avg_nll,num_books,compression_ratio,stride,model,pg19_source_dataset,physical_device
+snapkv,2048,25.79034,3.25,2,0.5,512,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,1
+chunkkv,2048,25.79034,3.25,2,0.5,512,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,1
+blockwise,2048,25.79034,3.25,2,0.5,512,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,1

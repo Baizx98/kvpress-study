@@ -1,0 +1,4 @@
+method,token_length,subword_ppl,avg_nll,subword_ppl_all_targets,avg_nll_all_targets,target_tokens_scored,target_tokens_scored_all,num_books,target_tokens,include_first_target,compression_ratio,stride,model,pg19_source_dataset,physical_device
+snapkv,32768,5.527877,1.70980392,5.491113,1.70313093,255,256,1,256,False,0.5,512,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+chunkkv,32768,5.527877,1.70980392,5.491113,1.70313093,255,256,1,256,False,0.5,512,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
+blockwise,32768,5.615273,1.7254902,5.577585,1.71875593,255,256,1,256,False,0.5,512,/Tan/model/Llama-3.1-8B-Instruct,/Tan/dataset/pg19-test,GPU-4eac01c5-47d1-3958-95bb-98d357b8b9c3
