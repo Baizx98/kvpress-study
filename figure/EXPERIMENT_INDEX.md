@@ -34,5 +34,6 @@
 - `ATC26_prefill_sweep_blockwise_snapkv_chunkkv_longbench_needle_pg19`: ATC26 prefill-only sweep figures for BlockWise, SnapKV, and ChunkKV.
 - `ATC26_blockwise_attention_similarity_hotpotqa_3samples`: ATC26 BlockWise layer/KV-head kept-block similarity heatmaps.
 - `ATC26_blockwise_head_group_similarity_hotpotqa_3samples`: ATC26 BlockWise KV-head group selection similarity figures.
+- [ATC26_blockwise_temporal_index_similarity](/home10T/bzx/workspace/kvpress-study/figure/experiments/ATC26_blockwise_temporal_index_similarity/README.md)
 - `scoring_overhead_snapkv_chunkkv`: SnapKV and ChunkKV scoring overhead figures against fused attention kernels.
 - `sparse_index_overhead_snapkv_chunkkv_blockwise`: paper-style sparse-index overhead figure for SnapKV, ChunkKV, and KVCore.

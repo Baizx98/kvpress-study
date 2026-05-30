@@ -1,0 +1,26 @@
+{
+  "experiment_name": "ATC26_blockwise_temporal_index_similarity",
+  "source": "evaluation/results/experiments/ATC26_blockwise_temporal_index_similarity/artifacts/decode1024/ATC26_temporal_similarity_aggregate.csv",
+  "figures": [
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__single__lag_overlap_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__single__lag_jaccard_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__single__lag_score_cosine_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__single__lag_curve.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__single__reuse_curve.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__window__lag_overlap_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__window__lag_jaccard_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__window__lag_score_cosine_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__window__lag_curve.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx8192__window__reuse_curve.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__single__lag_overlap_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__single__lag_jaccard_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__single__lag_score_cosine_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__single__lag_curve.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__single__reuse_curve.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__window__lag_overlap_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__window__lag_jaccard_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__window__lag_score_cosine_heatmap.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__window__lag_curve.png",
+    "figure/experiments/ATC26_blockwise_temporal_index_similarity/decode1024/llama31_8b_instruct__ctx16384__window__reuse_curve.png"
+  ]
+}
