@@ -35,5 +35,6 @@
 - [decode_hybrid_final_stage](/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/decode_hybrid_final_stage/README.md)
 - `ATC26_prefill_sweep_blockwise_snapkv_chunkkv_longbench_needle_pg19`: ATC26 prefill-only sweep for BlockWise, SnapKV, and ChunkKV.
 - `ATC26_longbench16_prefill_sweep_blockwise_snapkv_chunkkv`: ATC26 prefill-only sweep for BlockWise, SnapKV, and ChunkKV.
+- `ATC26_blockwise_attention_similarity_hotpotqa_3samples`: ATC26 BlockWise layer/KV-head kept-block similarity on 3 LongBench hotpotqa samples.
 - `scoring_overhead_snapkv_chunkkv`: SnapKV and ChunkKV scoring overhead microbenchmark against fused attention kernels.
 - `sparse_index_overhead_snapkv_chunkkv_blockwise`: sparse-index score/top-k overhead for SnapKV, ChunkKV, and BlockWisePress.
