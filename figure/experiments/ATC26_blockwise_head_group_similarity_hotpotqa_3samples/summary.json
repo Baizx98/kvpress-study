@@ -1,0 +1,14 @@
+{
+  "experiment_name": "ATC26_blockwise_head_group_similarity_hotpotqa_3samples",
+  "source_experiment": "ATC26_blockwise_attention_similarity_hotpotqa_3samples",
+  "figures": [
+    "ATC26_head_group_pairwise_similarity.png",
+    "ATC26_head_group_vs_all_selection.png",
+    "llama31_8b_instruct__per_layer_group_vs_all.png",
+    "mistral_7b_instruct_v03__per_layer_group_vs_all.png",
+    "per_layer_head_similarity/llama31_8b_instruct__r0p5__sample00__all_layers_head_similarity.png",
+    "per_layer_head_similarity/mistral_7b_instruct_v03__r0p5__sample00__all_layers_head_similarity.png",
+    "per_layer_head_similarity/qwen3_8b__r0p5__sample00__all_layers_head_similarity.png",
+    "qwen3_8b__per_layer_group_vs_all.png"
+  ]
+}
