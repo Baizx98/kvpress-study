@@ -15,7 +15,7 @@ def main() -> None:
     allocated = 0
 
     print(
-        "pid={} physical_device={} total={}MiB free={}MiB target={}MiB".format(
+        "memory_test pid={} physical_device={} total={}MiB free={}MiB target={}MiB".format(
             os.getpid(),
             os.environ.get("CUDA_VISIBLE_DEVICES"),
             total // 1024 // 1024,
@@ -47,7 +47,7 @@ def main() -> None:
     while True:
         _ = a @ b
         torch.cuda.synchronize(device)
-        print(f"heartbeat holding={allocated // 1024 // 1024}MiB time={int(time.time())}", flush=True)
+        print(f"memory_test heartbeat holding={allocated // 1024 // 1024}MiB time={int(time.time())}", flush=True)
         time.sleep(5)
 
 
