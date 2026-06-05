@@ -35,5 +35,6 @@
 - `ATC26_blockwise_attention_similarity_hotpotqa_3samples`: ATC26 BlockWise layer/KV-head kept-block similarity heatmaps.
 - `ATC26_blockwise_head_group_similarity_hotpotqa_3samples`: ATC26 BlockWise KV-head group selection similarity figures.
 - [ATC26_blockwise_temporal_index_similarity](/home10T/bzx/workspace/kvpress-study/figure/experiments/ATC26_blockwise_temporal_index_similarity/README.md)
+- [ATC26_decode_prompt_kvcache_importance_heatmap_longbench](/home10T/bzx/workspace/kvpress-study/figure/experiments/ATC26_decode_prompt_kvcache_importance_heatmap_longbench/README.md): token-level prompt KVCache keep/discard heatmaps across LongBench decode steps.
 - `scoring_overhead_snapkv_chunkkv`: SnapKV and ChunkKV scoring overhead figures against fused attention kernels.
 - `sparse_index_overhead_snapkv_chunkkv_blockwise`: paper-style sparse-index overhead figure for SnapKV, ChunkKV, and KVCore.
