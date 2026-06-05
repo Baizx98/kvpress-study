@@ -1,0 +1,22 @@
+{
+  "experiment_name": "ATC26_token_level_temporal_similarity",
+  "run_tag": "cross_model_delta1024",
+  "source": "evaluation/results/experiments/ATC26_token_level_temporal_similarity/artifacts/cross_model_delta1024/ATC26_token_level_temporal_similarity_aggregate.csv",
+  "head_agg": "mean",
+  "context_length_filter": null,
+  "paper_csv": "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/future_token_oracle_overlap_by_layer.csv",
+  "figures": [
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/mistral_7b_instruct_v03__ctx8192__keep70__layer_delta_overlap_heatmap.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/mistral_7b_instruct_v03__ctx8192__keep70__per_layer_overlap_curves.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/mistral_7b_instruct_v03__ctx8192__keep50__layer_delta_overlap_heatmap.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/mistral_7b_instruct_v03__ctx8192__keep50__per_layer_overlap_curves.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/mistral_7b_instruct_v03__ctx8192__keep30__layer_delta_overlap_heatmap.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/mistral_7b_instruct_v03__ctx8192__keep30__per_layer_overlap_curves.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/qwen3_8b__ctx8192__keep70__layer_delta_overlap_heatmap.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/qwen3_8b__ctx8192__keep70__per_layer_overlap_curves.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/qwen3_8b__ctx8192__keep50__layer_delta_overlap_heatmap.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/qwen3_8b__ctx8192__keep50__per_layer_overlap_curves.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/qwen3_8b__ctx8192__keep30__layer_delta_overlap_heatmap.pdf",
+    "figure/experiments/ATC26_token_level_temporal_similarity/cross_model_delta1024/qwen3_8b__ctx8192__keep30__per_layer_overlap_curves.pdf"
+  ]
+}

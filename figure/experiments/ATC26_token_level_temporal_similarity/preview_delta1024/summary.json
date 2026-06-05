@@ -1,0 +1,13 @@
+{
+  "experiment_name": "ATC26_token_level_temporal_similarity",
+  "run_tag": "preview_delta1024",
+  "source": "evaluation/results/experiments/ATC26_token_level_temporal_similarity/artifacts/preview_delta1024/ATC26_token_level_temporal_similarity_aggregate.csv",
+  "head_agg": "mean",
+  "context_length_filter": null,
+  "outputs": {
+    "figure_pdf": "figure/experiments/ATC26_token_level_temporal_similarity/preview_delta1024/figure6_token_level_temporal_similarity.pdf",
+    "figure_png": "figure/experiments/ATC26_token_level_temporal_similarity/preview_delta1024/figure6_token_level_temporal_similarity.png",
+    "overlap_csv": "figure/experiments/ATC26_token_level_temporal_similarity/preview_delta1024/figure6_token_level_overlap_curve.csv",
+    "reuse_csv": "figure/experiments/ATC26_token_level_temporal_similarity/preview_delta1024/figure6_token_level_reuse_curve.csv"
+  }
+}
