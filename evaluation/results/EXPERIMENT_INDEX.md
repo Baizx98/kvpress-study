@@ -42,3 +42,4 @@
 - [ATC26_token_level_temporal_similarity](/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/ATC26_token_level_temporal_similarity/README.md): token-level important KV set temporal overlap and fixed-refresh recall on PG19 decode traces.
 - `scoring_overhead_snapkv_chunkkv`: SnapKV and ChunkKV scoring overhead microbenchmark against fused attention kernels.
 - `sparse_index_overhead_snapkv_chunkkv_blockwise`: sparse-index score/top-k overhead for SnapKV, ChunkKV, and BlockWisePress.
+- [end2end_serving_kvcore_vllm_infinigen_longreq](/home10T/bzx/workspace/kvpress-study/evaluation/results/experiments/end2end_serving_kvcore_vllm_infinigen_longreq/README.md): unified request manifests for KVCore, vLLM, and InfiniGen end-to-end serving throughput/latency experiments.
