@@ -43,6 +43,8 @@ class DualPhasePerLayerPress(BasePress):
     decode_hidden_states_buffer_size: int = 16
     decode_block_budget: int | None = None
     decode_cold_block_budget: int | None = None
+    decode_top_p_threshold: float | None = None
+    decode_skip_first_layers: int = 0
     decode_budget_scale: float = 1.0
     decode_cold_budget_scale: float = 1.0
     require_question_aware: bool = True
@@ -82,6 +84,8 @@ class DualPhasePerLayerPress(BasePress):
         assert self.decode_hidden_states_buffer_size > 0, "decode_hidden_states_buffer_size must be > 0"
         assert self.decode_block_budget is None or self.decode_block_budget >= 0
         assert self.decode_cold_block_budget is None or self.decode_cold_block_budget >= 0
+        assert self.decode_top_p_threshold is None or 0 < self.decode_top_p_threshold <= 1
+        assert self.decode_skip_first_layers >= 0, "decode_skip_first_layers must be >= 0"
         assert self.decode_budget_scale >= 0, "decode_budget_scale must be >= 0"
         assert self.decode_cold_budget_scale >= 0, "decode_cold_budget_scale must be >= 0"
         assert isinstance(self.prefill_press, BlockWisePress), "prefill_press must be BlockWisePress"
@@ -135,6 +139,14 @@ class DualPhasePerLayerPress(BasePress):
             attentions = output[1] if len(output) > 1 and output[1] is not None else None
             keys, values = self._compress_prefill(module, hidden_states, keys, values, attentions, kwargs)
             self._write_back_cache(cache, layer_idx, keys, values)
+            return output
+
+        if layer_idx < self.decode_skip_first_layers:
+            module.masked_key_indices = None
+            self.layer_cached_masks[layer_idx] = None
+            self.layer_block_states[layer_idx] = {
+                "mode": "decode_skipped_layer",
+            }
             return output
 
         self._append_decode_hidden_states(layer_idx, hidden_states)
@@ -238,6 +250,7 @@ class DualPhasePerLayerPress(BasePress):
             kwargs,
             compression_ratio=0.0,
             keep_budget=keep_budget,
+            top_p_threshold=self.decode_top_p_threshold if keep_budget is None else None,
             force_refresh_summary=True,
         )
         original_num_blocks = plan["num_blocks"]
@@ -281,6 +294,7 @@ class DualPhasePerLayerPress(BasePress):
             kwargs,
             compression_ratio=0.0,
             keep_budget=keep_budget,
+            top_p_threshold=self.decode_top_p_threshold if keep_budget is None else None,
             force_refresh_summary=True,
         )
         mask = self._build_mask_from_active_blocks(keys, self.block_size, plan["kept_block_indices"])
@@ -308,8 +322,12 @@ class DualPhasePerLayerPress(BasePress):
         layer_idx = self._resolve_layer_idx(module)
         total_keep_budget = self._resolve_decode_budget(layer_idx, keys, cold=False)
         active_keep_budget = self._resolve_decode_budget(layer_idx, keys, cold=True)
-        total_keep_budget = max(0, total_keep_budget)
-        active_keep_budget = max(0, min(active_keep_budget, total_keep_budget))
+        if total_keep_budget is not None:
+            total_keep_budget = max(0, total_keep_budget)
+        if active_keep_budget is not None:
+            active_keep_budget = max(0, active_keep_budget)
+        if total_keep_budget is not None and active_keep_budget is not None:
+            active_keep_budget = min(active_keep_budget, total_keep_budget)
 
         total_plan = self.decode_press.build_block_plan(
             module,
@@ -320,6 +338,7 @@ class DualPhasePerLayerPress(BasePress):
             kwargs,
             compression_ratio=0.0,
             keep_budget=total_keep_budget,
+            top_p_threshold=self.decode_top_p_threshold if total_keep_budget is None else None,
             force_refresh_summary=True,
         )
 
@@ -344,6 +363,7 @@ class DualPhasePerLayerPress(BasePress):
             kwargs,
             compression_ratio=0.0,
             keep_budget=active_keep_budget,
+            top_p_threshold=self.decode_top_p_threshold if active_keep_budget is None else None,
             force_refresh_summary=True,
         )
         self.decode_press.build_or_refresh_block_summary(
@@ -374,11 +394,13 @@ class DualPhasePerLayerPress(BasePress):
         }
         return retained_keys, retained_values
 
-    def _resolve_decode_budget(self, layer_idx: int, keys: torch.Tensor, cold: bool) -> int:
+    def _resolve_decode_budget(self, layer_idx: int, keys: torch.Tensor, cold: bool) -> int | None:
         num_blocks = math.ceil(keys.shape[2] / self.block_size)
         explicit_budget = self.decode_cold_block_budget if cold else self.decode_block_budget
         if explicit_budget is not None:
             base_budget = explicit_budget
+        elif self.decode_top_p_threshold is not None:
+            return None
         else:
             prefill_budget = self.layer_prefill_kept_blocks.get(layer_idx, num_blocks)
             scale = self.decode_cold_budget_scale if cold else self.decode_budget_scale

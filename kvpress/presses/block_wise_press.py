@@ -363,6 +363,29 @@ class BlockWisePress(BasePress):
         top_indices = candidate_scores.topk(min(count, candidate_tensor.numel()), dim=-1).indices
         return candidate_tensor[top_indices]
 
+    def _select_top_p_block_indices(
+        self,
+        scores: torch.Tensor,
+        candidates: list[int],
+        top_p: float,
+        device: torch.device,
+    ) -> torch.Tensor:
+        if not candidates:
+            return torch.empty(scores.shape[0], 0, dtype=torch.long, device=device)
+        assert 0 < top_p <= 1, "top_p must be in (0, 1]"
+
+        candidate_tensor = torch.tensor(candidates, dtype=torch.long, device=device)
+        candidate_scores = scores.index_select(dim=-1, index=candidate_tensor)
+        sorted_scores, sorted_order = candidate_scores.sort(dim=-1, descending=True)
+        sorted_candidates = candidate_tensor[sorted_order]
+
+        probabilities = torch.softmax(sorted_scores, dim=-1)
+        cumulative = probabilities.cumsum(dim=-1)
+        per_sample_counts = (cumulative < top_p).sum(dim=-1) + 1
+        keep_count = int(per_sample_counts.max().item())
+        keep_count = min(keep_count, candidate_tensor.numel())
+        return sorted_candidates[:, :keep_count]
+
     def build_block_plan(
         self,
         module: nn.Module,
@@ -373,6 +396,7 @@ class BlockWisePress(BasePress):
         kwargs: dict,
         compression_ratio: float | None = None,
         keep_budget: int | None = None,
+        top_p_threshold: float | None = None,
         force_refresh_summary: bool = False,
         score_reuse_hint: torch.Tensor | None = None,
         score_reuse_weight: float = 0.0,
@@ -400,14 +424,39 @@ class BlockWisePress(BasePress):
         num_blocks = analysis["block_scores"].shape[-1]
         ratio = self.compression_ratio if compression_ratio is None else compression_ratio
 
-        if keep_budget is None:
+        if top_p_threshold is not None:
+            assert keep_budget is None, "keep_budget and top_p_threshold are mutually exclusive"
+            effective_keep_budget = num_blocks
+        elif keep_budget is None:
             effective_keep_budget = min(num_blocks, max(0, int(math.ceil(num_blocks * (1.0 - ratio)))))
         else:
             effective_keep_budget = min(num_blocks, max(0, int(keep_budget)))
         has_partial_tail_block = key_len % self.block_size != 0
         tail_block_idx = num_blocks - 1
 
-        if effective_keep_budget == 0:
+        if top_p_threshold is not None and num_blocks > 0:
+            sink_count = min(self.prefix_sink_blocks, num_blocks)
+            recent_count = min(self.protected_recent_blocks, num_blocks)
+            protected_sink_indices = set(range(sink_count))
+            protected_recent_indices = set(range(max(0, num_blocks - recent_count), num_blocks))
+            protected_tail_indices = {tail_block_idx} if has_partial_tail_block and num_blocks > 0 else set()
+            protected_indices = protected_sink_indices | protected_recent_indices | protected_tail_indices
+            remaining_candidates = [idx for idx in range(num_blocks) if idx not in protected_indices]
+            selected_remaining = self._select_top_p_block_indices(
+                analysis["block_scores"],
+                remaining_candidates,
+                top_p_threshold,
+                keys.device,
+            )
+            if protected_indices:
+                protected_tensor = torch.tensor(
+                    sorted(protected_indices), dtype=torch.long, device=keys.device
+                ).expand(keys.shape[0], -1)
+                kept_block_indices = torch.cat([protected_tensor, selected_remaining], dim=-1).sort(dim=-1).values
+            else:
+                kept_block_indices = selected_remaining.sort(dim=-1).values
+            effective_keep_budget = kept_block_indices.shape[-1]
+        elif effective_keep_budget == 0:
             kept_block_indices = torch.empty(keys.shape[0], 0, dtype=torch.long, device=keys.device)
         elif effective_keep_budget >= num_blocks:
             kept_block_indices = torch.arange(num_blocks, device=keys.device).expand(keys.shape[0], -1)

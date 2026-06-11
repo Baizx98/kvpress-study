@@ -224,6 +224,8 @@ class EvaluationConfig:
     dual_phase_mode: Optional[str] = None
     decode_block_budget: Optional[int] = None
     decode_cold_block_budget: Optional[int] = None
+    decode_top_p_threshold: Optional[float] = None
+    decode_skip_first_layers: Optional[int] = None
     decode_budget_scale: Optional[float] = None
     decode_cold_budget_scale: Optional[float] = None
 
@@ -410,6 +412,10 @@ class EvaluationConfig:
             components.append(f"dbudget{self.decode_block_budget}")
         if self.decode_cold_block_budget is not None:
             components.append(f"dcoldbudget{self.decode_cold_block_budget}")
+        if self.decode_top_p_threshold is not None:
+            components.append(f"dtopP{self.decode_top_p_threshold:.2f}")
+        if self.decode_skip_first_layers is not None:
+            components.append(f"dskipfirst{self.decode_skip_first_layers}")
         if self.decode_budget_scale is not None:
             components.append(f"dbscale{self.decode_budget_scale:.2f}")
         if self.decode_cold_budget_scale is not None:
@@ -649,6 +655,8 @@ class EvaluationRunner:
             press.compression_ratio = compression_ratio
             press.decode_block_budget = self.config.decode_block_budget
             press.decode_cold_block_budget = self.config.decode_cold_block_budget
+            press.decode_top_p_threshold = self.config.decode_top_p_threshold
+            press.decode_skip_first_layers = self.config.decode_skip_first_layers or 0
             press.decode_budget_scale = self.config.decode_budget_scale or 1.0
             press.decode_cold_budget_scale = self.config.decode_cold_budget_scale or 1.0
 
@@ -657,6 +665,8 @@ class EvaluationRunner:
                 f"(mode={press.decode_mode}, prefill_ratio={press.compression_ratio}, "
                 f"compression_interval={press.compression_interval}, "
                 f"decode_block_budget={press.decode_block_budget}, decode_cold_block_budget={press.decode_cold_block_budget}, "
+                f"decode_top_p_threshold={press.decode_top_p_threshold}, "
+                f"decode_skip_first_layers={press.decode_skip_first_layers}, "
                 f"decode_budget_scale={press.decode_budget_scale}, "
                 f"decode_cold_budget_scale={press.decode_cold_budget_scale}, "
                 f"decode_hidden_states_buffer_size={press.decode_hidden_states_buffer_size})"
