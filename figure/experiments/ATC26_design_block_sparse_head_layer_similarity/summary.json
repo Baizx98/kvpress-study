@@ -1,0 +1,25 @@
+{
+  "experiment_name": "ATC26_design_block_sparse_head_layer_similarity",
+  "source_experiment": "ATC26_blockwise_attention_similarity_hotpotqa_3samples",
+  "source_json": "evaluation/results/experiments/ATC26_blockwise_attention_similarity_hotpotqa_3samples/artifacts/ATC26_attention_similarity_aggregate.json",
+  "model_key": "llama31_8b_instruct",
+  "model_label": "Llama-3.1-8B",
+  "compression_ratio": 0.5,
+  "figure_size_inches": [
+    3.35,
+    2.85
+  ],
+  "colormap": "viridis",
+  "value_range": [
+    0.0,
+    1.0
+  ],
+  "head_score_cosine_upper_mean": 0.8855094026089979,
+  "layer_similarity_upper_mean": 0.6351295208904955,
+  "figures": [
+    "figure/experiments/ATC26_design_block_sparse_head_layer_similarity/ATC26_design_llama31_8b_instruct__r0p5__kv_head_score_cosine.pdf",
+    "figure/experiments/ATC26_design_block_sparse_head_layer_similarity/ATC26_design_llama31_8b_instruct__r0p5__kv_head_score_cosine.png",
+    "figure/experiments/ATC26_design_block_sparse_head_layer_similarity/ATC26_design_llama31_8b_instruct__r0p5__layer_block_index_jaccard.pdf",
+    "figure/experiments/ATC26_design_block_sparse_head_layer_similarity/ATC26_design_llama31_8b_instruct__r0p5__layer_block_index_jaccard.png"
+  ]
+}
