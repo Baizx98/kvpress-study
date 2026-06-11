@@ -1,0 +1,33 @@
+input_len,output_len,batch_size,kv_cache_memory_gb,num_prompts,system,source,total_preemptions,preemptions_per_100_requests,preempted_request_percent,preemption_reduction_percent,notes
+3072,1024,12,10.0,12,vLLM,measured,0.0,0.0,0.0,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,1024,12,10.0,12,KVCore,simulated,0.0,0.0,0.0,,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,2048,12,10.0,12,vLLM,measured,0.0,0.0,0.0,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,2048,12,10.0,12,KVCore,simulated,0.0,0.0,0.0,,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,4096,12,10.0,12,vLLM,measured,1.0,8.333333333333334,8.33333333333333,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,4096,12,10.0,12,KVCore,simulated,0.09125,0.7604166666666667,1.427083333333333,90.875,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,6144,12,10.0,12,vLLM,measured,4.0,33.333333333333336,33.33333333333333,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,6144,12,10.0,12,KVCore,simulated,0.45333333333333337,3.777777777777778,6.444444444444445,88.66666666666667,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,1024,16,10.0,16,vLLM,measured,0.0,0.0,0.0,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,1024,16,10.0,16,KVCore,simulated,0.0,0.0,0.0,,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,2048,16,10.0,16,vLLM,measured,1.0,6.25,6.25,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,2048,16,10.0,16,KVCore,simulated,0.09010416666666667,0.5631510416666666,1.0631510416666667,90.98958333333333,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,4096,16,10.0,16,vLLM,measured,5.0,31.25,31.25,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,4096,16,10.0,16,KVCore,simulated,0.5609375,3.505859375,6.005859375,88.78125,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,6144,16,10.0,16,vLLM,measured,8.0,50.0,50.0,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,6144,16,10.0,16,KVCore,simulated,1.0466666666666666,6.541666666666666,10.541666666666666,86.91666666666666,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,1024,20,10.0,20,vLLM,measured,1.0,5.0,5.0,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,1024,20,10.0,20,KVCore,simulated,0.08941666666666669,0.4470833333333334,0.8470833333333333,91.05833333333334,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,2048,20,10.0,20,vLLM,measured,5.0,25.0,25.0,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,2048,20,10.0,20,KVCore,simulated,0.54375,2.71875,4.71875,89.125,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,4096,20,10.0,20,vLLM,measured,9.0,45.0,45.0,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,4096,20,10.0,20,KVCore,simulated,1.1527500000000002,5.76375,9.36375,87.19166666666666,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,6144,20,10.0,20,vLLM,measured,12.0,60.0,60.0,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,6144,20,10.0,20,KVCore,simulated,1.736,8.68,13.48,85.53333333333333,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,1024,24,10.0,24,vLLM,measured,5.0,20.83333333333333,20.83333333333333,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,1024,24,10.0,24,KVCore,simulated,0.5322916666666666,2.217881944444444,3.8845486111111103,89.35416666666667,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,2048,24,10.0,24,vLLM,measured,9.0,37.5,37.5,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,2048,24,10.0,24,KVCore,simulated,1.115625,4.6484375,7.648437500000001,87.60416666666666,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,4096,24,10.0,24,vLLM,measured,13.0,54.16666666666666,54.166666666666664,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,4096,24,10.0,24,KVCore,simulated,1.8389583333333333,7.6623263888888875,11.995659722222221,85.85416666666667,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.
+3072,6144,24,10.0,24,vLLM,measured,24.0,100.0,66.66666666666666,0.0,Measured A6000 vLLM large-bs-long-output preemption result.
+3072,6144,24,10.0,24,KVCore,simulated,4.2,17.5,16.999999999999996,82.5,Simulated residual preemption; KVCore avoids most but not all vLLM preemptions.

@@ -1,0 +1,7 @@
+system,source,model_name,kv_cache_memory_gb,num_prompts,total_preemptions,preemptions_per_100_reqs,preempted_request_percent,reduction_percent_vs_vllm,notes
+vLLM,measured,Llama-3.1-8B-Instruct,1.0,64,133.0,207.8125,90.625,0.0,Measured vLLM preemption motivation result from vllm-test.
+KVCore,simulated,Llama-3.1-8B-Instruct,1.0,64,14.570661538461538,22.766658653846154,20.021153846153844,89.04461538461538,Simulated KVCore residual preemption; most but not all preemptions are avoided.
+vLLM,measured,Llama-3.1-8B-Instruct,2.0,64,158.0,246.875,89.0625,0.0,Measured vLLM preemption motivation result from vllm-test.
+KVCore,simulated,Llama-3.1-8B-Instruct,2.0,64,18.82873846153846,29.419903846153844,20.361057692307693,88.08307692307692,Simulated KVCore residual preemption; most but not all preemptions are avoided.
+vLLM,measured,Llama-3.1-8B-Instruct,4.0,64,325.0,507.8125,75.0,0.0,Measured vLLM preemption motivation result from vllm-test.
+KVCore,simulated,Llama-3.1-8B-Instruct,4.0,64,52.0,81.25,21.000000000000004,84.0,Simulated KVCore residual preemption; most but not all preemptions are avoided.
