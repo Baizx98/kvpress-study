@@ -1,0 +1,8 @@
+{
+  "experiment_name": "kvcore_lifecycle_decode_longbench16_2pct_seed43_top_p095_skip2",
+  "source_summary_csv": "evaluation/results/experiments/kvcore_lifecycle_decode_longbench16_2pct_seed43_top_p095_skip2/summary.csv",
+  "aggregation": "mean full_kv and decode_qaware_blockwise_top_p scores within each LongBench task category",
+  "figure_pdf": "figure/experiments/kvcore_lifecycle_decode_longbench16_2pct_seed43_top_p095_skip2/longbench_task_group_absolute_score_singlecol.pdf",
+  "figure_png": "figure/experiments/kvcore_lifecycle_decode_longbench16_2pct_seed43_top_p095_skip2/longbench_task_group_absolute_score_singlecol.png",
+  "plot_csv": "figure/experiments/kvcore_lifecycle_decode_longbench16_2pct_seed43_top_p095_skip2/longbench_task_group_absolute_score_singlecol.csv"
+}

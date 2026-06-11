@@ -1,0 +1,9 @@
+category,full_kv,decode_qaware_blockwise_top_p,delta,num_tasks,full_kv_samples,decode_qaware_blockwise_samples,category_label
+multi_doc_qa,64.235,64.235,0.0,4,16,16,"Multi
+QA"
+single_doc_qa,42.75333333333333,43.35333333333333,0.5999999999999991,3,11,11,"Single
+QA"
+summarization,26.61,22.313333333333333,-4.296666666666666,3,12,12,Summ.
+code,52.55,55.3,2.75,2,20,20,Code
+synthetic,51.25,50.0,-1.25,2,8,8,Synth.
+few_shot,44.95,44.114999999999995,-0.8350000000000009,2,8,8,Few

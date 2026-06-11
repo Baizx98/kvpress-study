@@ -39,3 +39,4 @@
 - [ATC26_token_level_temporal_similarity](/home10T/bzx/workspace/kvpress-study/figure/experiments/ATC26_token_level_temporal_similarity/preview_delta1024/README.md): token-level important KV set overlap and fixed-refresh recall across decode-step deltas.
 - `scoring_overhead_snapkv_chunkkv`: SnapKV and ChunkKV scoring overhead figures against fused attention kernels.
 - `sparse_index_overhead_snapkv_chunkkv_blockwise`: paper-style sparse-index overhead figure for SnapKV, ChunkKV, and KVCore.
+- [kvcore_lifecycle_decode_longbench16_2pct_seed43_top_p095_skip2](/home10T/bzx/workspace/kvpress-study/figure/experiments/kvcore_lifecycle_decode_longbench16_2pct_seed43_top_p095_skip2/README.md): task-group average LongBench score bars.
